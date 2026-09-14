@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class DecisionTemplate extends Model
+class OdjTemplate extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'label',
         'description',
-        'email_subject',
-        'email_body',
+        'contenu',
         'commission_id',
         'is_active',
         'created_by',
@@ -27,13 +27,18 @@ class DecisionTemplate extends Model
         ];
     }
 
+    public function commission(): BelongsTo
+    {
+        return $this->belongsTo(Commission::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function commission(): BelongsTo
+    public function reunions(): HasMany
     {
-        return $this->belongsTo(Commission::class, 'commission_id');
+        return $this->hasMany(Reunion::class);
     }
 }

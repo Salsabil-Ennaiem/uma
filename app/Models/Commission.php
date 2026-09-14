@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['etablissement_id', 'president_id', 'nom', 'discipline', 'is_active'])]
 class Commission extends Model
@@ -45,5 +46,10 @@ class Commission extends Model
     public function estPresident(User $user): bool
     {
         return $this->president_id === $user->getKey();
+    }
+
+    public function reunions(): HasMany
+    {
+        return $this->hasMany(Reunion::class);
     }
 }

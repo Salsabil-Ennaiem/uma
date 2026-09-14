@@ -3,8 +3,20 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
+use App\Models\Decision;
+use App\Models\Dossier;
+use App\Models\Invitation;
+use App\Models\OdjTemplate;
+use App\Models\Presence;
+use App\Models\Reunion;
 use App\Models\User;
+use App\Policies\DecisionPolicy;
+use App\Policies\DossierPolicy;
+use App\Policies\InvitationPolicy;
+use App\Policies\OdjTemplatePolicy;
+use App\Policies\PresencePolicy;
 use App\Policies\PvPolicy;
+use App\Policies\ReunionPolicy;
 use App\PvSignatures\SignatureResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -46,6 +58,12 @@ class AppServiceProvider extends ServiceProvider
     private function registerPolicies(): void
     {
         Gate::policy(Pv::class, PvPolicy::class);
+        Gate::policy(Reunion::class, ReunionPolicy::class);
+        Gate::policy(Invitation::class, InvitationPolicy::class);
+        Gate::policy(Presence::class, PresencePolicy::class);
+        Gate::policy(Dossier::class, DossierPolicy::class);
+        Gate::policy(Decision::class, DecisionPolicy::class);
+        Gate::policy(OdjTemplate::class, OdjTemplatePolicy::class);
 
         Gate::before(function (User $user) {
             return $user->role === UserRole::Admin ? true : null;

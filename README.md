@@ -60,6 +60,18 @@ Cible : `🟦 NOUVELLE APPLICATION`. Les contrats du package sont **implémenté
 - **Policies** qui délèguent au contrat : `PvPolicy` (tout délègue à `CanManagePv`), `CommissionPolicy`, `InstitutionPolicy`, `DecisionTemplatePolicy` (anti-IDOR : président limité à sa commission) + `Gate::before` admin.
 - **Tests** : `tests/Feature/P5RbAcContratsTest.php` (10 tests — liens contrats, RBAC fail-closed par rôle, 403 sans garde, bascule driver `qualified`, trace mécanisme+horodatage, seuils quorum/unanime, resolution commission, hiérarchie, anti-IDOR commission/décision/PV). Suite complète : **38 tests / 178 assertions**. `composer.json` toujours sans `spatie/laravel-permission`.
 
+## Étape 4 (P6) — Module Réunions de commission en Filament
+
+Cible : **🟦 NOUVELLE APPLICATION** — module réécrit en Filament (référence Voyager en lecture seule), branché sur le package pour le PV signé.
+
+- **Modèles** (`app/Models/`) : `Reunion` (statuts `brouillon → planifiee → en_cours → terminee/annulee`, type `presentiel/visio/hybride`, ODJ, soft-deletes, `estPassee()`, `pvs()` = source `reunion/{id}`), `Invitation`, `Presence` (présent/absent/excusé), `Dossier` (+pivot `reunion_dossier` positionné), `Decision` (snapshot du modèle paramétrable), `OdjTemplate`, `AuditLog` (append-only : `action`, avant/après, IP). Enums `ReunionStatut` (matrice de transitions + `label()`), `ReunionType`, `InvitationStatut`, `PresenceStatut`, `DossierStatut`.
+- **Migration** `2026_09_16_000001_create_reunions_module_tables.php` (+ 6 factories).
+- **Services** : `ReunionService` (création en transaction + **auto-ajout des membres** hors président, `transition()` avec garde d'état + audit + notifications, `genererPv()` → `PvService::store(..., 'reunion', id)` puis `send` aux présents), `DecisionService` (record snapshot + dossier → `traite`, `exportCsv`, `pvContenu`).
+- **Ressources Filament** (générées CLI `--generate`, personnalisées ensuite) : `Reunions/ReunionResource` + `Schemas/ReunionForm` + `Tables/ReunionsTable` (badges statut, filtres statut/commission, `TrashedFilter` corbeille), `Dossiers/*`, `Decisions/*` (colonne décideur). Pages custom : `ManageReunionPresences`, `ManageReunionDecisions` (RBAC en `mount`), `ReunionCorbeille` (restore/force delete, admin), pages statut + « Générer le PV » dans `EditReunion`, export décisions CSV.
+- **Policies RBAC** : admin tout ; président de SA commission ; gestionnaire école ; agent administratif (création, présence, décisions) ; membre vue seulement ; doctorant vue de sa propre décision ; fail-closed ; `genererPv` = réunion passée + contrat package `CanManagePv`.
+- **Notifications** : `ReunionPlanifiee`/`ReunionTerminee` (base) + `Mail/ReunionConvocation` + vue markdown `emails/reunion/convocation.blade.php` (canal mail unique).
+- **Tests** : `tests/Feature/ReunionsModuleTest.php` (9 tests — parcours complet création→convocation→présences→décisions→terminer→PV, transitions invalides, RBAC par rôle, corbeille, mallette décision, anti-IDOR commission, smoke Filament 200/403). Suite complète : **47 tests / 239 assertions**.
+
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
