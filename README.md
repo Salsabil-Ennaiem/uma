@@ -19,6 +19,22 @@ php -S localhost:2000 -t public/
 php artisan test
 ```
 
+## Étape 1 (P3) — Intégration de `pv-module`
+
+Module de documents consommé **tel quel** via Composer (aucun copier-coller).
+
+- **Dépôt** : `salsabil-ennaiem/pv-module` `^1.0` depuis **Packagist**, verrouillé en `v1.0.2` (dist GitHub). Publiable : `config/pv-module.php`, `lang/vendor/pv-module`.
+- **Routes** : `/admin/documents/*` (noms gardés `pv-module.*`), middleware `['web', 'auth']`, `login` nommé → `/admin/login`.
+- **`config/pv-module.php`** adapté : `user_model` = `App\Models\User`, `signature_mechanism` relié à `config('uma.compliance.signature_driver')`.
+- **Évidences (demo locale)** : PV brouillon → en attente → validé ; PDF FR/AR dans `storage/app/evidence/` ; notifications base (cloche) + mails (log `storage/logs/laravel.log`).
+- **Test d'intégration** : `tests/Feature/PvModuleIntegrationTest.php` (workflow complet + PDF FR/AR + notifications).
+
+### Bugs package signalés (sans correction locale)
+
+1. **Tags obsolètes** : `v1` et `v1.0.0` pointent sur l'ancien commit `3219e36` (avant R2/R3). **Résolu** par l'éditeur : les tags `v1.0.1` (`54a520b`, R2+R3) et `v1.0.2` (`dcd7af8`, fix routage) sont publiés et poussés ; la dépendance locale a été remplacée par Packagist.
+2. **Tags de publication du prompt** : `pv-module-config` / `pv-module-lang` ne correspondent pas aux tags réels du package (`pv-config` / `pv-lang`).
+3. **Noms de routes codés en dur** : les notifications appelaient `route('pv-module.show')` ; **résolu** par l'éditeur (`config('pv-module.routes.name_prefix', ...)`), livré dans `v1.0.2`. Le préfixe d'URL reste `admin/documents` et le préfixe de noms reste `pv-module.`.
+
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
