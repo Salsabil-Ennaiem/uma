@@ -1,9 +1,9 @@
 <?php
 
 use App\Models\User;
-use SalsabilEnnaiem\PvModule\Defaults\DefaultApprovalRules;
-use SalsabilEnnaiem\PvModule\Defaults\DefaultParticipantResolver;
-use SalsabilEnnaiem\PvModule\Defaults\DefaultPvRules;
+use App\PvRules\ApprovalRules;
+use App\PvRules\ParticipantResolver;
+use App\PvRules\PvRules;
 
 return [
 
@@ -50,9 +50,9 @@ return [
     | s'adapte à la RBAC, aux types de PV et au domaine de l'hôte.
     */
 
-    'can_manage_pv' => DefaultPvRules::class,
-    'approval_rules' => DefaultApprovalRules::class,
-    'participant_resolver' => DefaultParticipantResolver::class,
+    'can_manage_pv' => PvRules::class,
+    'approval_rules' => ApprovalRules::class,
+    'participant_resolver' => ParticipantResolver::class,
 
     /*
     |--------------------------------------------------------------------------

@@ -6,8 +6,9 @@ use App\Models\User;
 test('config/uma.php ne déclare que les flags des 3 risques', function () {
     $flags = config('uma.compliance');
 
-    expect(array_keys($flags))->toBe(['signature_driver', 'pv_template_version'])
+    expect(array_keys($flags))->toBe(['signature_driver', 'qualified', 'pv_template_version'])
         ->and($flags['signature_driver'])->toBe('simple_image')
+        ->and(array_keys($flags['qualified']))->toBe(['allow_without_certificate'])
         ->and($flags['pv_template_version'])->toBe('v1');
 });
 

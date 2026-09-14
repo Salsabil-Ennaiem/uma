@@ -28,4 +28,9 @@ class DecisionTemplate extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function commission(): BelongsTo
+    {
+        return $this->belongsTo(Commission::class, 'commission_id');
+    }
 }

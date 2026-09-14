@@ -4,25 +4,23 @@ namespace App\Providers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Policies\PvPolicy;
+use App\PvSignatures\SignatureResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use SalsabilEnnaiem\PvModule\Models\Pv;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        $this->app->singleton(SignatureResolver::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         $this->registerDomainGates();
+        $this->registerPolicies();
     }
 
     private function registerDomainGates(): void
@@ -43,5 +41,14 @@ class AppServiceProvider extends ServiceProvider
             'manage-doctorat',
             fn (User $user) => in_array($user->role, [UserRole::Admin, UserRole::GestionnaireEcole, UserRole::PresidentCommission, UserRole::DirecteurThese, UserRole::Doctorant], true),
         );
+    }
+
+    private function registerPolicies(): void
+    {
+        Gate::policy(Pv::class, PvPolicy::class);
+
+        Gate::before(function (User $user) {
+            return $user->role === UserRole::Admin ? true : null;
+        });
     }
 }

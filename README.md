@@ -47,6 +47,19 @@ Généralisation du moteur en « document engine du CDC » : les types sont déc
 - **Adaptation Filament 5** : `form(Schema $schema)` dans `Filament\Schemas\Schema` (plus `Filament\Forms\Form`) ; actions de table ≡ `Filament\Actions\EditAction|DeleteAction|BulkActionGroup|DeleteBulkAction` (le package `filament/tables` ne les définit plus) ; `$navigationIcon` et `$navigationGroup` typés `BackedEnum|null` / `UnitEnum|null`.
 - **Capacité manquante détectée** : batch d'impression + logos/en-têtes paramétrables par structure → **sous-prompt package** rédigé (`Sous-prompt P4 — PdfService batch & logos`), à exécuter après validation de P4.
 
+## Étape 3 (P5) — RBAC métier branchée sur les contrats du package
+
+Cible : `🟦 NOUVELLE APPLICATION`. Les contrats du package sont **implémentés ici**, jamais modifiés dans le package.
+
+- **3 implémentations de contrats** dans `app/PvRules/` (liées via `config/pv-module.php`) :
+  - `PvRules` (`CanManagePv`) : matrice rôles UMA — création `admin|gestionnaire_ecole|president_commission|agent_administration` ; validation/signature par les présents ; gestion restreinte au **périmètre commission** (`source_type=commission`) ; fail-closed + log discret.
+  - `ApprovalRules` : seuils paramétrables `config('uma.approval')` — `unanimous` (défaut) ou `quorum %` ; la validation du créateur approuve (règle Voyager).
+  - `ParticipantResolver` : signataires résolus depuis les **entités métier** (membres + président d'une `Commission`, jury) ; normalisation héritée du package.
+- **Signature R2** (`app/PvSignatures/`) : `SignatureResolver` unique lit `uma.compliance.signature_driver` ; `SimpleImageSignatureStrategy` (délègue au package) et `QualifiedSignatureStrategy` (stub journalise « certificat requis », basculable par `SIGNATURE_ALLOW_WITHOUT_CERTIFICATE`). Retour toujours mécanisme + horodatage. `SIGNATURE_DRIVER=qualified` change le comportement **sans toucher une ligne de logique** (testé).
+- **Hiérarchie métier** (app seulement) : `Universite → EcoleDoctorale → Etablissement → Commission` (+ pivot `commission_user`), exposée dans l'admin (groupe « Institution », ressources Filament 5 `Universites/EcoleDoctorales/Etablissements/Commissions`).
+- **Policies** qui délèguent au contrat : `PvPolicy` (tout délègue à `CanManagePv`), `CommissionPolicy`, `InstitutionPolicy`, `DecisionTemplatePolicy` (anti-IDOR : président limité à sa commission) + `Gate::before` admin.
+- **Tests** : `tests/Feature/P5RbAcContratsTest.php` (10 tests — liens contrats, RBAC fail-closed par rôle, 403 sans garde, bascule driver `qualified`, trace mécanisme+horodatage, seuils quorum/unanime, resolution commission, hiérarchie, anti-IDOR commission/décision/PV). Suite complète : **38 tests / 178 assertions**. `composer.json` toujours sans `spatie/laravel-permission`.
+
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
