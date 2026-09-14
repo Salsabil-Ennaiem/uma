@@ -1,7 +1,7 @@
-# Commandes utilisées — Plateforme UMA (par étape : P1, P3, P4, P5, P6, P7)
+# Commandes utilisées — Plateforme UMA (par étape : P1, P3, P4, P5, P6, P7, P8)
 
 > La CLI Filament est **la source des ressources** (`make:filament-resource --generate`, `make:filament-page`) : on génère, puis on personnalise les fichiers produits.
-> **⚠️ Provenance** : les commandes P1/P3/P4/P5 proviennent de **sessions antérieures** — listées ici **reconstituées d'après le README et les évidences** (pas une trace verbatim). Les commandes **P6/P7** sont celles des **sessions actuelles** (exactes pour les invocations vérifiées).
+> **⚠️ Provenance** : les commandes P1/P3/P4/P5 proviennent de **sessions antérieures** — listées ici **reconstituées d'après le README et les évidences** (pas une trace verbatim). Les commandes **P6/P7/P8** sont celles des **sessions actuelles** (exactes pour les invocations vérifiées).
 
 ---
 
@@ -142,3 +142,38 @@
 | --- | --- |
 | `vendor/bin/pint app tests config database` | Normaliser tout le code + tests + config (32 fichiers réformattés ; tests toujours verts). |
 | `vendor/bin/pint app/Filament/Resources/RapportEtats/Tables/RapportEtatsTable.php tests/Feature/P7ArchivageAuditTest.php` | Pint ciblé après le fix `IconColumn` + smoke test. |
+
+## P8 — Moteur de workflow paramétrable en base (SESSION ACTUELLE — commandes exactes)
+
+> ⚠️ Contrairement à P4/P6/P7, **aucun `make:filament-resource` n''a été utilisé en P8** : les modèles, le service moteur et le seeder ont été écrits à la main puis ajustés à la volée (les écrans Filament Workflow/Réclamation restent à finaliser).
+
+### Base de données
+
+| Commande | Objectif |
+| --- | --- |
+| `php artisan make:migration CreateWorkflowEngineTables` *(gabarit)* | Créer le fichier puis personnaliser : `workflow_definitions`, `workflow_transitions`, `workflow_guards`, `workflow_instances`, `workflow_audit_trails`, `reclamations`, `reclamation_discussions`, `reservations`. |
+| `php artisan migrate` | Appliquer la migration (1ʳᵉ exécution → échec : index dupliqué `subject_type_subject_id` déjà créé par `morphs()` ; corrigé puis relancé). |
+| `php -l <fichier>` (boucle) | Linter PHP après chaque correction (migration, services, seeder). |
+| script temporaire `drop_partial_tables.php` | Purger les tables partiellement créées après l''échec (puis supprimé) — exécuté via `php drop_partial_tables.php`. |
+| `php artisan db:seed --class=WorkflowSeeder` | Insérer les définitions A/B/C (21 transitions, 9 gardes). |
+
+### Vérifications / smoke (scripts temporaires, supprimés ensuite)
+
+| Commande | Objectif |
+| --- | --- |
+| `php smoke_seed.php` | Compter définitions/transitions/gardes + vérifier `config('workflow.*')`. |
+| `php testsecrets` | — |
+
+### Tests
+
+| Commande | Objectif |
+| --- | --- |
+| `php artisan test --filter=P8WorkflowEngineTest` | Suite P8 seule (9 tests / 46 assertions). |
+| `php artisan test` | Suite complète (72 tests / 376 assertions) — contrôle de régression global. |
+| `./vendor/bin/pest tests/Feature/P7ArchivageAuditTest.php` | Baseline : 1 warning pré-existant (pas lié à P8). |
+
+### Code style (Pint — à exécuter en fin de P8)
+
+| Commande | Objectif |
+| --- | --- |
+| `vendor/bin/pint app tests database config docs` | Normaliser le style sur tout le code + tests + data (suggéré, non encore exécuté). |

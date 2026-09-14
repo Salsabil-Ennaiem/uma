@@ -133,3 +133,54 @@
     - **Cause** : `TextColumn::make('is_active')->boolean()` — en Filament 5.8, `boolean()` n'existe plus sur `TextColumn` (déplacé sur `IconColumn`).
     - **Solution** : `IconColumn::make('is_active')->boolean()` (convention déjà en place dans `CommissionResource`/`DecisionTemplateResource`), import ajouté.
     - **Leçon** : aligner toute nouvelle colonne booléenne sur le pattern `IconColumn` ; add un **smoke test Filament** (`filament.admin.resources.rapport-etats.index/create/edit` → 200) pour Cacher ce type de régression.
+
+## P8 — Moteur de workflow paramétrable (SESSION ACTUELLE — bugs réels)
+
+> **Note** : les résolutions P8 ont été corrigées **pendant la session en cours** (pas de commit à l''avance pour séparer cause/solution). Leur compteur suit le dernier P7 (bug #20).
+
+---
+
+21. **`SQLSTATE: index workflow_instances_subject_type_subject_id_index already exists` (échec de migrate, bloquant)**
+    - **Cause** : la migration utilisait `$table->morphs('subject')` **ET** un `$table->index(['subject_type', 'subject_id'])` supplémentaire. Or `morphs()` crée déjà cet index → tentative de créer un 2ᵉ index homonyme → SQLite rejette.
+    - **Solution** : supprimer la ligne `$table->index(...)` de la migration (doublon strictement inutile).
+    - **Leçon** : `morphs()` équivaut à `string() + id() + index` — ne jamais redéclarer l''index séparément.
+
+22. **Mise à jour partielle de la base après échec de migration (corrompue, bloquant)**
+    - **Cause** : la migration a créé les premières tables (`workflow_definitions`…) avant d''échouer sur l''index ; le relancer au 2ᵉ essaie échoue puisque les tables existent déjà.
+    - **Solution** : exécuter un script PHP externe (`drop_partial_tables.php`) appelant `Schema::dropIfExists()` sur chaque table partielle, puis relancer `php artisan migrate` proprement. Le script a été supprimé après usage.
+    - **Leçon** : en SQLite, un échec partiel de migration laisse l''état corrompu — toujours vérifier `Schema::hasTable()` avant `create`, ou purger avant réessayer.
+
+23. **`WorkflowGuard::syncGuards` dupliquait les gardes à chaque relance du seeder (fonctionnel, subtil)**
+    - **Cause** : la clé d''idempotence était `$rule.':'.json_encode($params)` comparée à un simple `pluck('rule')` (sans les params). `json_encode` de params identiques = même clé, mais la colonne `rule` seule ≠ clé complète → toujours considéré comme nouveau → doublon.
+    - **Solution** : mapper les gardes existants sur la clé complète `$rule.':'.json_encode($params)` avant de comparer (comme fait en `syncGuards`).
+    - **Leçon** : l''idempotence d''un seeder qui crée des données relationnelles complexes doit comparer **toute la clé métier**, pas une colonne partielle.
+
+24. **`RuntimeException: No instances [App\Services\AuditLogger]` au démarrage du moteur (bloquant)**
+    - **Cause** : `WorkflowEngine` déclare un `private AuditLogger $audit` en injected constructor ; or `AuditLogger` n''est pas bind dans le container et n''a pas de `__construct()` résolu automatiquement. Laravel ne sait pas le résoudre.
+    - **Solution** : dans `WorkflowEngine.__construct()`, injecter le service `App\Services\AuditLogger` — vérifier que le fichier existe bien (`app/Services/AuditLogger.php`, créé en P7). L''erreur est apparue en test car le `app()` n''avait pas encore bootstrappé correctement ; résolu en recréant la methode `make` ou en instanciant proprement dans le constructor du test.
+    - **Leçon** : lorsqu''un service dépend d''un autre service, les deux doivent être **résoluble via le container**. Test d''abord avec `php artisan tinker --execute="dd(app(WorkflowEngine::class));"`.
+
+25. **`Rôle « agent_administration » non autorisé pour la transition valider_depot` — rôle déclaré dans le seeder mais refusé par le moteur (bloquant, subtil)**
+    - **Cause** : dans `WorkflowEngine::guard()`, la variable `$role` contient **l''instance de l''enum `UserRole`** (`$actor->role`), mais `$allowedRoles` contient des **chaînes** (`['agent_administration', …]`). La comparaison stricte `in_array($enumInstance, $strings, true)` est **toujours false** → tous les rôles déclarés échouent.
+    - **Solution** : comparer `$role?->value` (la chaîne) plutôt que l''instance enum elle-même :
+      ```php
+      $roleValue = $role?->value ?? null;
+      // …
+      $roleValue === UserRole::Admin->value || in_array($roleValue, $allowedRoles, true)
+      ```
+    - **Leçon** : PHP 8.1+ casts les enums-backed via `$model->role` → instance enum. `in_array` strict comparing enum ≠ string — **toujours extraire `->value`** avant une comparaison array.
+
+26. **Réclamation : `statut` et `closed_at` non mis à jour par le moteur (fonctionnel, subtil)**
+    - **Cause** : le moteur applique les actions déclarées en base (`reclamation.actualiser`) **avant** d''avoir mis à jour `$instance->current_state` vers le nouvel état. L''action lisait l''ancien état (`ouverte`) au lieu du nouveau (`en_cours`, `cloturee`) → le `statut` de la réclamation restait à sa valeur initiale.
+    - **Solution** : dans `WorkflowEngine::apply()`, définir `$instance->current_state = $to` **avant** la boucle des actions, puis appeler `$instance->save()` après — les actions voient maintenant le bon état et le `statut` se met à jour correctement.
+    - **Leçon** : l''ordre dans un workflow est **crucial** → première_phase (guard), deuxième_phase (écriture état), troisième_phase (actions qui lisent l''état), quatrième_phase (persistence). Ne pas mélanger les étapes.
+
+27. **`creerReservation` ne trouvait pas les dates de soutenance (fonctionnel)**
+    - **Cause** : les gardes (`no_overlap`) lisent `$instance->data` qui ne contenait **pas encore le payload** (merge effectué après les gardes et les actions). Le payload (`soutenance_date`, `salle`, `jury_membres`) n''était pas accessible dans les actions.
+    - **Solution** : fusionner `$payload` dans `$instance->data` **avant** d''exécuter les gardes **et** les actions (le merge a lieu dès le début du `DB::transaction`, juste après la validation).
+    - **Leçon** : le payload d''une transition doit être **disponible** à la fois pour les gardes qui l''évaluent et pour les actions qui l''utilisent — le merge doit précéder les deux.
+
+28. **Duplication de `.gitkeep` inutile dans les dossiers remplis (vestige, non bloquant)**
+    - **Cause** : les fichiers `.gitkeep` (créés au moment où les dossiers étaient vides — PvRules, Services, Reunions, Commissions) n''ont jamais été supprimés une fois les dossiers remplis.
+    - **Solution** : documentation dans `docs/structure-du-projet.md` + signalés pour suppression au prochain commit. Les fichiers restent **inoffensifs** tant qu''ils existent.
+    - **Leçon** : un `.gitkeep` est une **solution de contournement temporaire** — penser à le supprimer dès que le dossier contient au moins un fichier réel.
