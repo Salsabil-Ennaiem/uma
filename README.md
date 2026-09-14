@@ -35,6 +35,18 @@ Module de documents consommé **tel quel** via Composer (aucun copier-coller).
 2. **Tags de publication du prompt** : `pv-module-config` / `pv-module-lang` ne correspondent pas aux tags réels du package (`pv-config` / `pv-lang`).
 3. **Noms de routes codés en dur** : les notifications appelaient `route('pv-module.show')` ; **résolu** par l'éditeur (`config('pv-module.routes.name_prefix', ...)`), livré dans `v1.0.2`. Le préfixe d'URL reste `admin/documents` et le préfixe de noms reste `pv-module.`.
 
+## Étape 2 (P4) — Types CDC + templates FR/AR + écran « Modèles de décision »
+
+Généralisation du moteur en « document engine du CDC » : les types sont déclarés **par configuration**, jamais en dur dans un `if/else`.
+
+- **`config/pv-module.php` → `types`** : `pv`, `attestation`, `decision`, `arrete`, `invitation`, `diplome`, `fiche_acces` (7 types CDC).
+- **Seeder `UmaDocumentTemplatesSeeder`** : 7 templates par défaut (sections header/contenu/signature, marges, orientation — `diplome` paysage, `invitation` marges 30). RTL AR confiné aux templates (`default_locale` / `rtl_locales`).
+- **Écran admin « Modèles de décision »** (`/admin/decision-templates`) : CRUD Filament 5 sur `DecisionTemplate` — `label`, `description`, `email_subject`, `email_body` (variables `{prenom} {nom} {label}`), `commission_id`, `is_active` (RBAC natif `UserRole`).
+- **Évidences** : `storage/app/private/evidence/p4-*.pdf` — attestation AR longue RTL (`dir="rtl"`, `lang="ar"`, PDF 44 Ko), invitation officielle (32 Ko), décision (32 Ko).
+- **Tests** : `tests/Feature/CdcDocumentTypesTest.php` (13 tests — types en config, template par type, création + PDF par type, RTL AR long, écran Filament admin) ; suite complète : **28 tests / 130 assertions**.
+- **Adaptation Filament 5** : `form(Schema $schema)` dans `Filament\Schemas\Schema` (plus `Filament\Forms\Form`) ; actions de table ≡ `Filament\Actions\EditAction|DeleteAction|BulkActionGroup|DeleteBulkAction` (le package `filament/tables` ne les définit plus) ; `$navigationIcon` et `$navigationGroup` typés `BackedEnum|null` / `UnitEnum|null`.
+- **Capacité manquante détectée** : batch d'impression + logos/en-têtes paramétrables par structure → **sous-prompt package** rédigé (`Sous-prompt P4 — PdfService batch & logos`), à exécuter après validation de P4.
+
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>

@@ -96,6 +96,6 @@ return [
     | Le type générique par défaut suffit pour une utilisation simple.
     */
 
-    'types' => ['pv'],
+    'types' => ['pv', 'attestation', 'decision', 'arrete', 'invitation', 'diplome', 'fiche_acces'],
 
 ];
