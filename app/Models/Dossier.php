@@ -65,6 +65,11 @@ class Dossier extends Model
         return $this->morphMany(Document::class, 'documentable');
     }
 
+    public function workflowInstances(): MorphMany
+    {
+        return $this->morphMany(WorkflowInstance::class, 'subject');
+    }
+
     public function scopeEnAttente($query)
     {
         return $query->where('statut', DossierStatut::EnAttente->value);
