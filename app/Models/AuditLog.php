@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use LogicException;
 
 class AuditLog extends Model
 {
@@ -33,10 +34,18 @@ class AuditLog extends Model
         return $this->belongsTo(User::class);
     }
 
-    public static function log(string $action, ?Model $entity = null, ?array $before = null, ?array $after = null, bool $withIp = true): static
-    {
+    public static function log(
+        string $action,
+        ?Model $entity = null,
+        ?array $before = null,
+        ?array $after = null,
+        bool $withIp = true,
+        ?User $actor = null,
+    ): static {
+        $actor ??= auth()->user();
+
         return self::create([
-            'user_id' => auth()->id(),
+            'user_id' => $actor?->getKey(),
             'action' => $action,
             'entity_type' => $entity?->getMorphClass(),
             'entity_id' => $entity?->getKey(),
@@ -44,5 +53,24 @@ class AuditLog extends Model
             'after' => $after,
             'ip_address' => $withIp ? request()->ip() : null,
         ]);
+    }
+
+    public function save(array $options = []): bool
+    {
+        if ($this->exists) {
+            throw new LogicException('Une entrée du journal d\'audit est immuable.');
+        }
+
+        return parent::save($options);
+    }
+
+    public function update(array $attributes = [], array $options = []): bool
+    {
+        throw new LogicException('Une entrée du journal d\'audit est immuable.');
+    }
+
+    public function delete(): ?bool
+    {
+        throw new LogicException('Une entrée du journal d\'audit est immuable.');
     }
 }

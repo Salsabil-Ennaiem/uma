@@ -1,7 +1,7 @@
-# Commandes utilisées — Plateforme UMA (par étape : P1, P3, P4, P5, P6)
+# Commandes utilisées — Plateforme UMA (par étape : P1, P3, P4, P5, P6, P7)
 
 > La CLI Filament est **la source des ressources** (`make:filament-resource --generate`, `make:filament-page`) : on génère, puis on personnalise les fichiers produits.
-> **⚠️ Provenance** : les commandes P1/P3/P4/P5 proviennent de **sessions antérieures** — listées ici **reconstituées d'après le README et les évidences** (pas une trace verbatim). Les commandes **P6** sont celles de la **session actuelle** (exactes).
+> **⚠️ Provenance** : les commandes P1/P3/P4/P5 proviennent de **sessions antérieures** — listées ici **reconstituées d'après le README et les évidences** (pas une trace verbatim). Les commandes **P6/P7** sont celles des **sessions actuelles** (exactes pour les invocations vérifiées).
 
 ---
 
@@ -98,3 +98,47 @@
 | `storage/app/private/evidence/p6-attestation-reussite.pdf` | Attestation de réussite AR (33 Ko). |
 
 > **Note PDF** : les deux fichiers sont **non chiffrés** (pas de `/Encrypt`, `%%EOF` valide). Le rendu illisible dans Notepad vient de la compression FlateDecode (normale) — à ouvrir dans un lecteur PDF classique.
+
+---
+
+## P7 — Archivage & audit (mallette + traçabilité + rapports/états)
+
+### Génération & base de données
+
+| Commande | Objectif |
+| --- | --- |
+| `php artisan make:migration create_archivage_rapports_tables` | Migration unique : `documents`, `document_versions` (immuables), `rapport_etats`. *(reconstitué)* |
+| `php artisan make:model Document` (+ `DocumentVersion`, `RapportEtat`, `AuditLog` adapté) | Modèles Eloquent P7. *(reconstitué)* |
+| `php artisan make:policy DocumentPolicy` (+ `AuditLogPolicy`, `RapportEtatPolicy`) | Policies de lecture / abstraction RBAC. *(reconstitué)* |
+| `php artisan migrate` | Appliquer `2026_09_20_000001_create_archivage_rapports_tables.php` — **exécutée avec succès**. |
+| — | `config/archive.php`, `app/Services/{AuditLogger,ArchiveService,RapportService}.php` créés manuellement. (pas de commande) |
+
+### Ressources Filament
+
+| Commande | Objectif |
+| --- | --- |
+| `php artisan make:filament-resource Document --generate` | Écran « Mallette » (slug `mallette` pour éviter la collision avec le pv-module). *(reconstitué)* |
+| `php artisan make:filament-resource RapportEtat --generate` | Écran « États / rapports » (`/admin/rapport-etats`). *(reconstitué)* |
+| `php artisan make:filament-resource AuditLog --generate` | Écran « Journal d'audit » (lecture seule, Admin). *(reconstitué)* |
+
+### Routes & vérifs
+
+| Commande | Objectif |
+| --- | --- |
+| (édition `routes/web.php`) | Routes `admin/rapports-etats/{etat}/apercu` + `/{etat}/pdf` → `RapportController` avec `authorize('generer')`. |
+| `php artisan route:list \| Select-String "rapport-etats"` | Vérifier routage Filament (`filament.admin.resources.rapport-etats.*`, tests) et web. |
+| `php -l <fichier>` (en boucle) | Linter PHP après chaque correction de syntaxe (ternaire, braces des RelationManagers). |
+
+### Tests
+
+| Commande | Objectif |
+| --- | --- |
+| `php artisan test --filter=P7ArchivageAuditTest` | Suite P7 seule (15 tests / 88 assertions, puis 16/91 après le smoke des pages). |
+| `php artisan test` | Suite complète (63 tests / 330 assertions) — contrôle de régression. |
+
+### Code style (Pint)
+
+| Commande | Objectif |
+| --- | --- |
+| `vendor/bin/pint app tests config database` | Normaliser tout le code + tests + config (32 fichiers réformattés ; tests toujours verts). |
+| `vendor/bin/pint app/Filament/Resources/RapportEtats/Tables/RapportEtatsTable.php tests/Feature/P7ArchivageAuditTest.php` | Pint ciblé après le fix `IconColumn` + smoke test. |

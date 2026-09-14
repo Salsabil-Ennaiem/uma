@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Dossiers;
 use App\Filament\Resources\Dossiers\Pages\CreateDossier;
 use App\Filament\Resources\Dossiers\Pages\EditDossier;
 use App\Filament\Resources\Dossiers\Pages\ListDossiers;
+use App\Filament\Resources\Dossiers\RelationManagers\DecisionsRelationManager;
+use App\Filament\Resources\Dossiers\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\Dossiers\Schemas\DossierForm;
 use App\Filament\Resources\Dossiers\Tables\DossiersTable;
 use App\Models\Dossier;
@@ -39,7 +41,8 @@ class DossierResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            DocumentsRelationManager::class,
+            DecisionsRelationManager::class,
         ];
     }
 

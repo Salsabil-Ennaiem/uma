@@ -1,7 +1,7 @@
-# Bugs & problèmes rencontrés — Plateforme UMA (par étape : P1, P3, P4, P5, P6)
+# Bugs & problèmes rencontrés — Plateforme UMA (par étape : P1, P3, P4, P5, P6, P7)
 
 > Seuls les **vrais bugs / obstacles** (bloquants ou subtils) sont listés, avec cause racine et solution.
-> P1/P3/P4/P5 : reconstitués d'après le README (sessions antérieures). P6 : session actuelle (exacts).
+> P1/P3/P4/P5 : reconstitués d'après le README (sessions antérieures). P6/P7 : sessions actuelles (exacts).
 > Mise à jour au fil de l'eau.
 
 ---
@@ -96,3 +96,40 @@
 - **`Call to undefined method ...::factory()`** : factories existantes mais trait `HasFactory` absent sur `OdjTemplate`/`DecisionTemplate` → ajouter le trait.
 - **Colonnes AuditLog dans le test** : le test requêtait `subject_type`/`subject_id`/`event` au lieu de `entity_type`/`entity_id`/`action` → aligner sur la vraie migration.
 - **Nettoyage idempotent de la démo** : supprimer dans l'ordre des dépendances (`Etablissement` → `EcoleDoctorale` → `Universite`) pour éviter les FK ; conserver l'admin entre deux runs (unique `users.email`).
+
+---
+
+## P7 — Archivage & audit (SESSION ACTUELLE — bugs réels)
+
+14. **`Unparenthesized a ? b : c ?: d` (Fatal PHP 8.5, bloquant)**
+    - **Cause** : ternaire chaînée `a ? b : c ?: d` non parenthésée dans `ArchiveService.php:137` — PHP 8.5 en fait une **Erreur fatale**.
+    - **Solution** : extraire `$ext` dans une variable intermédiaire avant la ternaire.
+    - **Leçon** : toute chaîne `? :` suivie d'un `?:` doit être parenthésée (`a ? b : (c ?: d)`), ou refactorisée.
+
+15. **`ParseError: Unclosed '{'` dans les RelationManagers Filament (bloquant)**
+    - **Cause** : **arrow functions** imbriquées dans les closures Filament (`fn (...) => ...`) ; combinaison avec les ternaires/PHP 8.5 sous Windows → erreur de parsing cryptique sans indication de ligne.
+    - **Solution** : réécrire `DocumentsRelationManager` et `DecisionsRelationManager` avec des **méthodes helper** classiques (`typesOptions()`, `toUploadedFile()`) — plus aucune arrow fn.
+    - **Leçon** : en PHP 8.5/Windows, privilégier les closures/méthodes classiques dans les schémas Filament ; on perd du temps à débouger un ParseError sinon.
+
+16. **`DecisionsRelationManager` : `$title` typé `string` alors que Filament attend `?string`**
+    - **Cause** : contrat de `Select::createOption` déclaré `?string`, notre closure `string $title` → TypeError à l'exécution.
+    - **Solution** : `?string $title`.
+
+17. **`Document::lastVersion()` retournait v1 au lieu de v2 (SQLite, bloquant)**
+    - **Cause** : `latest('version')` recalait **encore** `ORDER BY version` (le HasMany pose déjà `orderBy('version', 'asc')`), annulant le tri décroissant ; le dataset de test revenait à v1.
+    - **Solution** : `$this->versions()->reorder('version', 'desc')->first()` — `reorder()` écrase proprement l'ordre du relation.
+    - **Leçon** : `latest()` sur une relation déjà ordonnée est trompeur ; `reorder()` explicite.
+
+18. **`DocumentResource` : collision de route avec le pv-module (`admin/documents`)**
+    - **Cause** : le package occupe déjà `admin/documents` (immutable) ; Filament tentait de re-déclarer la route → conflit.
+    - **Solution** : `protected static ?string $slug = 'mallette';` → `admin/mallette`, navigation « Archivage & audit ».
+    - **Leçon** : vérifier les slugs du package **avant** de `--generate` une ressource du même nom.
+
+19. **`Controller` de base : `Call to undefined method ...::authorize()` (bloquant)**
+    - **Cause** : `RapportController::apercu()`/`pdf()` appellent `$this->authorize('generer', ...)` mais le `Controller` de base ne charge pas `AuthorizesRequests`.
+    - **Solution** : sur `app/Http/Controllers/Controller.php`, `use AuthorizesRequests, ValidatesRequests;` (compatibilité apps « classiques »).
+
+20. **Page `/admin/rapport-etats` : `Method Filament\Tables\Columns\TextColumn::boolean does not exist` (500, bloquant)**
+    - **Cause** : `TextColumn::make('is_active')->boolean()` — en Filament 5.8, `boolean()` n'existe plus sur `TextColumn` (déplacé sur `IconColumn`).
+    - **Solution** : `IconColumn::make('is_active')->boolean()` (convention déjà en place dans `CommissionResource`/`DecisionTemplateResource`), import ajouté.
+    - **Leçon** : aligner toute nouvelle colonne booléenne sur le pattern `IconColumn` ; add un **smoke test Filament** (`filament.admin.resources.rapport-etats.index/create/edit` → 200) pour Cacher ce type de régression.
