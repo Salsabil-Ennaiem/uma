@@ -76,6 +76,22 @@ class Dossier extends Model
         return $this->morphMany(WorkflowInstance::class, 'subject');
     }
 
+    /**
+     * Instance de workflow active la plus récente (aucun changement de schéma).
+     */
+    public function activeWorkflow(): ?WorkflowInstance
+    {
+        return $this->workflowInstances()
+            ->where('status', 'active')
+            ->latest('id')
+            ->first();
+    }
+
+    public function latestWorkflow(): ?WorkflowInstance
+    {
+        return $this->workflowInstances()->latest('id')->first();
+    }
+
     public function scopeEnAttente($query)
     {
         return $query->where('statut', DossierStatut::EnAttente->value);

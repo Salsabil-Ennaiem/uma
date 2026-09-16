@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Dossiers\Tables;
 
 use App\Enums\DossierStatut;
+use App\Models\Dossier;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -39,6 +40,17 @@ class DossiersTable
                         DossierStatut::EnCours => 'info',
                         DossierStatut::Traite => 'success',
                     }),
+                TextColumn::make('workflow')
+                    ->label('Workflow')
+                    ->badge()
+                    ->getStateUsing(fn (Dossier $record) => $record->activeWorkflow()?->current_state)
+                    ->formatStateUsing(fn (?string $state) => $state === null
+                        ? '—'
+                        : ucfirst(str_replace('_', ' ', $state)))
+                    ->color(fn (?string $state) => $state === null
+                        ? 'gray'
+                        : (in_array($state, ['archivee', 'diplome_disponible', 'cloturee'], true) ? 'success' : 'info'))
+                    ->toggleable(),
                 TextColumn::make('annee_inscription')
                     ->label('Année')
                     ->searchable()

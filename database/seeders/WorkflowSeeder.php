@@ -23,6 +23,7 @@ class WorkflowSeeder extends Seeder
     public function run(): void
     {
         $this->workflowA();
+        $this->workflowA2();
         $this->workflowB();
         $this->workflowC();
     }
@@ -32,7 +33,7 @@ class WorkflowSeeder extends Seeder
         $def = WorkflowDefinition::firstOrCreate(
             ['code' => 'inscription'],
             [
-                'name' => 'Inscription en doctorat (1ʳᵉ → 5ᵉ année)',
+                'name' => 'Inscription en doctorat (1ʳᵉ année)',
                 'description' => 'Dépôt → validation dossier → paiement inscription.tn → reçu → attestation FR/AR → archivage.',
                 'subject_type' => Dossier::class,
                 'states' => [
@@ -97,6 +98,131 @@ class WorkflowSeeder extends Seeder
         $this->transition($def, 'attestation_generee', 'archivee', 'archiver', [
             'roles' => ['admin'],
             'sort' => 60,
+        ]);
+    }
+
+    /**
+     * Ré-inscription 2ᵉ → 5ᵉ année : après validation, le dossier est examiné
+     * par la commission (ODJ + PV) ; au-delà d'un niveau seuil, la dérogation
+     * du président d'université est requise avant le paiement (CDC §3).
+     */
+    protected function workflowA2(): void
+    {
+        $def = WorkflowDefinition::firstOrCreate(
+            ['code' => 'reinscription'],
+            [
+                'name' => 'Ré-inscription en doctorat (2ᵉ → 5ᵉ année)',
+                'description' => 'Dépôt → validation → rapport d\'avancement → examen commission (PV) → dérogation éventuelle → paiement → reçu → attestation FR/AR → archivage.',
+                'subject_type' => Dossier::class,
+                'states' => [
+                    'demande',
+                    'valide_agent',
+                    'commission_examen',
+                    'pv_valide',
+                    'derogation_requise',
+                    'derogation_accorde',
+                    'paiement_attendu',
+                    'recu_uploaded',
+                    'recu_valide',
+                    'attestation_generee',
+                    'archivee',
+                ],
+                'initial_state' => 'demande',
+                'is_active' => true,
+            ],
+        );
+
+        $this->transition($def, 'demande', 'valide_agent', 'valider_agent', [
+            'roles' => ['agent_administration', 'gestionnaire_ecole'],
+            'sort' => 10,
+        ]);
+
+        // Passage en commission : le rapport d'avancement du doctorant est requis.
+        $this->transition($def, 'valide_agent', 'commission_examen', 'inscrire_commission', [
+            'roles' => ['gestionnaire_ecole', 'president_commission'],
+            'guards' => [[
+                'rule' => 'document',
+                'params' => ['type' => 'rapport_avancement'],
+                'error_message' => 'Le rapport d\'avancement du doctorant est manquant.',
+            ]],
+            'sort' => 20,
+        ]);
+
+        // Décision de la commission matérialisée par un PV.
+        $this->transition($def, 'commission_examen', 'pv_valide', 'valider_pv_commission', [
+            'roles' => ['president_commission'],
+            'guards' => [[
+                'rule' => 'document',
+                'params' => ['type' => 'pv'],
+                'error_message' => 'Le procès-verbal de la commission est manquant.',
+            ]],
+            'sort' => 30,
+        ]);
+
+        // Branche principale : niveau < 4 → poursuite directe vers le paiement.
+        $this->transition($def, 'pv_valide', 'paiement_attendu', 'suite_inscription', [
+            'roles' => ['gestionnaire_ecole'],
+            'guards' => [[
+                'rule' => 'data',
+                'params' => ['key' => 'niveau', 'operator' => '<', 'value' => 4],
+                'error_message' => 'Ce niveau ne requiert pas de dérogation.',
+            ]],
+            'sort' => 40,
+        ]);
+
+        // Branche dérogation : niveau ≥ 4 → décision du président d'université.
+        $this->transition($def, 'pv_valide', 'derogation_requise', 'demander_derogation', [
+            'roles' => ['gestionnaire_ecole'],
+            'guards' => [[
+                'rule' => 'data',
+                'params' => ['key' => 'niveau', 'operator' => '>=', 'value' => 4],
+                'error_message' => 'La dérogation du président d\'université est requise pour ce niveau.',
+            ]],
+            'sort' => 41,
+        ]);
+
+        $this->transition($def, 'derogation_requise', 'derogation_accorde', 'approuver_derogation', [
+            'roles' => ['admin'],
+            'notifications' => [[
+                'role' => 'doctorant',
+                'message' => 'Votre dérogation de prolongation a été approuvée.',
+            ]],
+            'sort' => 42,
+        ]);
+
+        $this->transition($def, 'derogation_accorde', 'paiement_attendu', 'suite_paiement_derogation', [
+            'roles' => ['gestionnaire_ecole'],
+            'sort' => 43,
+        ]);
+
+        $this->transition($def, 'paiement_attendu', 'recu_uploaded', 'deposer_recu', [
+            'roles' => ['doctorant'],
+            'sort' => 50,
+        ]);
+
+        $this->transition($def, 'recu_uploaded', 'recu_valide', 'valider_recu', [
+            'roles' => ['agent_administration', 'gestionnaire_ecole'],
+            'guards' => [[
+                'rule' => 'data',
+                'params' => ['key' => 'reception_paiement', 'operator' => '==', 'value' => true],
+                'error_message' => 'Le reçu de paiement n\'a pas été vérifié.',
+            ]],
+            'sort' => 60,
+        ]);
+
+        $this->transition($def, 'recu_valide', 'attestation_generee', 'generer_attestation', [
+            'roles' => ['agent_administration', 'gestionnaire_ecole', 'admin'],
+            'actions' => ['attestation.generer'],
+            'notifications' => [[
+                'role' => 'doctorant',
+                'message' => 'Votre attestation d\'inscription sera prête dans 72 heures.',
+            ]],
+            'sort' => 70,
+        ]);
+
+        $this->transition($def, 'attestation_generee', 'archivee', 'archiver', [
+            'roles' => ['admin'],
+            'sort' => 80,
         ]);
     }
 
@@ -272,7 +398,7 @@ class WorkflowSeeder extends Seeder
         $transition = WorkflowTransition::firstOrCreate(
             ['workflow_definition_id' => $def->getKey(), 'code' => $code],
             [
-                'label' => $options['label'] ?? $code,
+                'label' => $options['label'] ?? $this->humanize($code),
                 'from_state' => $from,
                 'to_state' => $to,
                 'roles' => $options['roles'] ?? ['admin'],
@@ -286,6 +412,11 @@ class WorkflowSeeder extends Seeder
         $this->syncGuards($transition, $options['guards'] ?? []);
 
         return $transition;
+    }
+
+    protected function humanize(string $code): string
+    {
+        return ucfirst(str_replace('_', ' ', $code));
     }
 
     protected function syncGuards(WorkflowTransition $transition, array $guards): void
