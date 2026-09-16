@@ -45,3 +45,16 @@ php artisan boost:install
 
 Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
 </laravel-boost-guidelines>
+
+## Règles d'exécution — Plateforme UMA
+
+- **Nom de base de données figé** : `uma_plateforme` (orthographe fixe, aucune variante type
+  `uma_plateforma`). Sans réponse contraire du CCK, provisionner ce nom.
+- **Interdiction de nom de table en dur en SQL brut** : `whereRaw`, `DB::raw`, `DB::statement`,
+  `->selectRaw` avec un nom de table sont proscrits. Passer par les modèles Eloquent, les builders,
+  ou `DB::getTablePrefix()`. Toute exception doit être signalée dans `docs/DECISIONS_UMA.md`
+  (ADR-0001) avec un commentaire dans le code.
+- **Décisions** : le registre canonique est `docs/DECISIONS_UMA.md` (ADR numérotés).
+  `voyager/DECISIONS_UMA.md` est une copie lecture seule.
+- **Discipline git** : aucun commit sans validation explicite de l'utilisateur ; les commits sont
+  groupés par phase validée.

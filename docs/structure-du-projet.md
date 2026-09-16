@@ -2,7 +2,7 @@
 
 > Document de référence pour comprendre **ce que fait chaque dossier et chaque fichier**.
 > Lecteurs visés : nouveau développeur, auditeur du stage, revue de P8/P9.
-> Généré au moment de la clôture P8 ; à mettre à jour au fil de l'eau (comme `docs/commands-used.md` et `docs/bugs-and-solutions.md`).
+> Généré à la clôture P8, mis à jour à la clôture **P9** ; à maintenir au fil de l'eau (comme `docs/commands-used.md` et `docs/bugs-and-solutions.md`).
 
 ---
 
@@ -10,17 +10,18 @@
 
 ```
 uma/
-├── app/                  ← Code applicatif Laravel (RBAC, Réunions, Archivage, Workflows, Filament)
+├── app/                  ← Code applicatif Laravel (RBAC, Réunions, Archivage, Workflows, Filament, Imports P9)
 ├── bootstrap/            ← Amorçage framework (app, providers, cache)
 ├── config/               ← Configuration (dont pv-module, archive, workflow, uma)
-├── database/             ← Migrations, seeders, factories
-├── docs/                 ← Documentation d'étape (bugs, commandes, structure)
+├── database/             ← Migrations, seeders, factories (+ exports_table et champs import P9)
+├── docs/                 ← Documentation d'étape (bugs, commandes, structure, transformation modules)
 ├── lang/                 ← Traductions (dont celles publiées depuis pv-module)
+├── livrables_cdc5/       ← Livrables CDC §5 (01→07 + archive) — hors code, non versionné en prod
 ├── public/               ← Point d'entrée web + assets publiés (Filament, build)
-├── resources/            ← Vues Blade, CSS/JS, emails markdown
+├── resources/            ← Vues Blade, CSS/JS, emails markdown (+ pages d'import P9)
 ├── routes/               ← routes/web.php + console.php
-├── storage/              ← Logs, cache, disques (documents archivés, évidences)
-├── tests/                ← Suites de tests par étape (P1 → P8)
+├── storage/              ← Logs, cache, disques (documents archivés, évidences, exports, signatures)
+├── tests/                ← Suites de tests par étape (P1 → P9)
 ├── vendor/               ← Packages Composer (dont salsabil-ennaiem/pv-module)
 └── …fichiers racine (voir §9)
 ```
@@ -52,6 +53,22 @@ uma/
 | `ReunionType.php` | Presentiel / Hybride / Visio |
 | `UserRole.php` | Admin / GestionnaireEcole / PresidentCommission / MembreCommission / DirecteurThese / AgentAdministration / Doctorant |
 
+### `app/Filament/Actions/` — actions transverses (P9)
+| Fichier | Rôle |
+| --- | --- |
+| `SendEmailBulkAction.php` | BulkAction Filament « Envoyer un email à la liste filtrée/sélectionnée » : tags `{{nom}}/{{email}}/{{role}}`, re-cadre sur les Policies (n'expédie jamais hors périmètre visible), passe par `FilteredListEmail` (ShouldQueue). |
+
+### `app/Filament/Exports/` — exports Filament natifs (P9)
+| Fichier | Rôle |
+| --- | --- |
+| `UserExporter.php` | Exporter `Filament\Actions\Exports\Exporter` pour `User` (§6 P9) : colonnes nom/email/rôle/nb commissions/créé le, `withCount('commissions')`, notification de fin. Utilisé par `ListUsers` via `ExportAction`. |
+
+### `app/Filament/Pages/Imports/` — pages d'import « moulinet » (P9 §6.6)
+| Fichier | Rôle |
+| --- | --- |
+| `ImportEnseignants.php` | Page Filament `/admin/import-enseignants` : upload CSV/XLSX/XML/JSON → `EnseignantImport` (validate-then-commit, transaction unique). |
+| `ImportTheses.php` | Page Filament `/admin/import-theses` : upload thèses en cours → `TheseImport` (doctorant/directeur/commission par email, statut, transaction unique). |
+
 ### `app/Filament/Resources/` — écrans d'administration
 Chaque ressource suit le conventionnement Filament 5 : `<Entité>Resource.php` + sous-dossiers `Pages/`, `Schemas/`, `Tables/`, `RelationManagers/`.
 
@@ -66,6 +83,7 @@ Chaque ressource suit le conventionnement Filament 5 : `<Entité>Resource.php` +
 | `EcoleDoctorales/`, `Etablissements/`, `Universites/` | Hiérarchie institutionnelle | `Manage*` (CRUD simples) |
 | `RapportEtats/` | États/rapports HTML+PDF (P7) | List / Create / Edit |
 | `Reunions/` | Module Réunions, cœur de l'app (P6) | List / Create / Edit / `ManageReunionPresences` / `ManageReunionDecisions` / `ReunionCorbeille` |
+| `Users/` | **Gestion des utilisateurs (P9)** : recherche multicritères OR, filtre rôle/commissions, tri, `SendEmailBulkAction`, `ExportAction`+`UserExporter`, `CsvExportService` | `ListUsers` + `UsersTable` |
 
 > Les sous-dossiers `Schemas/` et `Tables/` séparent les définitions de formulaire et de table du reste de la ressource (pattern maison, voir `DossierForm.php`, `ReunionsTable.php`…).
 
@@ -75,20 +93,29 @@ Chaque ressource suit le conventionnement Filament 5 : `<Entité>Resource.php` +
 | `Controller.php` | Base avec `AuthorizesRequests` + `ValidatesRequests` (bug P7 n°19). |
 | `RapportController.php` | Routes web `admin/rapports-etats/{etat}/apercu` + `/pdf`, gardées par `authorize('generer')`. |
 
+### `app/Imports/` — moulinets d'import génériques (P9 §6.6)
+| Fichier | Rôle |
+| --- | --- |
+| `BaseImport.php` | Moteur abstrait : détection CSV/XLSX/XML/JSON (OpenSpout + SimpleXML), normalisation d'en-têtes par `aliases()` insensible à la casse, validation Laravel par `rules()`, `validate-then-commit` (aucune écriture si une ligne est invalide), commit en **une seule transaction** DB, retour `ImportResult`/`ImportRow`. |
+| `EnseignantImport.php` | Import enseignants : mappe nom/email/role/grade/structure_recherche/etablissement ; `createRecord()` crée `User` avec `UserRole` casté. |
+| `TheseImport.php` | Import thèses : mappe doctorant_email/directeur_email/commission/sujet/statut ; résout les FK par email, crée `Dossier` + `directeur_id`. |
+| `ImportResult.php` / `ImportRow.php` | Value objects du résultat d'import (lignes OK/KO, messages de validation). |
+
 ### `app/Mail/` — Mailable (canal mail dédié)
 | Fichier | Rôle |
 | --- | --- |
 | `ReunionConvocation.php` | Convocation de réunion (P6) — seul canal mail des invités (bug P6 n°10). |
 | `WorkflowStateChanged.php` | Notification mail « état du workflow changé » (P8), vue markdown `emails/workflow/state-changed`. |
+| `FilteredListEmail.php` | **(P9)** Mail générique « liste filtrée » (ShouldQueue) : sujet/corps avec tags `{{nom}}/{{email}}/{{role}}` résolus dans le BulkAction, utilisé par `SendEmailBulkAction` et testé dans `P9ChecklistCdcTest`. |
 
 ### `app/Models/` — modèles Eloquent
 | Modèle | Rôle |
 | --- | --- |
 | `AuditLog` | Journal d'audit **append-only** (P7) : `log()` statique, update/delete/save refusés. |
-| `Commission` | Commission de discipline (rattachée à un établissement, président). |
+| `Commission` | Commission de discipline (rattachée à un établissement, président). Relation `membres()` many-to-many vers `User`. |
 | `Decision`, `DecisionTemplate` | Décision de réunion + modèle de décision (P4/P6). |
 | `Document`, `DocumentVersion` | Mallette polymorphique : pièces + versions **immuables** (hash, chemin, rétention) (P7). |
-| `Dossier` | Dossier de doctorant (sujet des workflows A/B). Relations : doctorant, commission, réunions, décisions, documents, `workflowInstances`. |
+| `Dossier` | Dossier de doctorant (sujet des workflows A/B). Relations : doctorant, `directeur_id` **(P9)**, commission, réunions, décisions, documents, `workflowInstances`. |
 | `EcoleDoctorale`, `Etablissement`, `Universite` | Hiérarchie institutionnelle. |
 | `Invitation`, `Presence` | Invitations + présence (P6). |
 | `OdjTemplate` | Modèle d'ordre du jour (P6). |
@@ -96,7 +123,7 @@ Chaque ressource suit le conventionnement Filament 5 : `<Entité>Resource.php` +
 | `Reclamation`, `ReclamationDiscussion` | Réclamation/ticket + discussions autour d'une réclamation (Workflow C, P8). |
 | `Reservation` | Réservation de salle / membre de jury — contrôle anti-chevauchement (`scopeChevauche`) (P8). |
 | `Reunion` | Réunion (statuts, ODJ, membres, lien visio) (P6). |
-| `User` | Utilisateur avec `role` (cast `UserRole`). |
+| `User` | Utilisateur avec `role` (cast `UserRole`). **P9** : champs `grade`, `structure_recherche`, `etablissement_id` (FK nullable) pour l'import enseignants. |
 | `WorkflowAuditTrail`, `WorkflowDefinition`, `WorkflowGuard`, `WorkflowInstance`, `WorkflowTransition` | Moteur de workflow paramétrable en base (P8) : définitions, instances, transitions, gardes, traces. |
 
 ### `app/Notifications/` — notifications (canal database / mail)
@@ -109,13 +136,13 @@ Chaque ressource suit le conventionnement Filament 5 : `<Entité>Resource.php` +
 | Rôle de chaque policy | Exemple |
 | --- | --- |
 | Délègue AUX contrats RBAC | `PvPolicy`, `ReunionPolicy`, `DecisionPolicy`, `DossierPolicy`, `InstitutionPolicy`, `InvitationPolicy`, `PresencePolicy`, `OdjTemplatePolicy`, `DocumentPolicy`, `RapportEtatPolicy` |
-| Logique locale mineure | `CommissionPolicy`, `DecisionTemplatePolicy`, `AuditLogPolicy` (lecture admin, écriture refusée), `UserPolicy` |
+| Logique locale mineure | `CommissionPolicy`, `DecisionTemplatePolicy`, `AuditLogPolicy` (lecture admin, écriture refusée), `UserPolicy` (P9 : `viewAny/view` scopés par rôle, `sendEmail` vérifié dans le BulkAction) |
 
 ### `app/Providers/`
 | Fichier | Rôle |
 | --- | --- |
 | `AppServiceProvider.php` | Bindings de base (contrats → implémentations, signatures…). |
-| `Filament/AdminPanelProvider.php` | Déclare le panneau `/admin` : ressources découvertes automatiquement, RBAC, couleurs, middlewares. |
+| `Filament/AdminPanelProvider.php` | Déclare le panneau `/admin` : ressources découvertes automatiquement, RBAC, couleurs, middlewares, pages d'import P9 enregistrées. |
 
 ### `app/PvRules/` — RBAC métier branchée sur les contrats du package (P5)
 | Fichier | Rôle |
@@ -136,6 +163,7 @@ Chaque ressource suit le conventionnement Filament 5 : `<Entité>Resource.php` +
 | --- | --- | --- |
 | `ArchiveService.php` | P7 | `archiverContenu`, `archiverUpload`, `nouvelleVersionContenu`, rétention par type. |
 | `AuditLogger.php` | P7 | Écrit les lignes append-only dans `audit_logs`. |
+| `CsvExportService.php` | **P9** | Export CSV maison (`;` par défaut pour Excel FR) : `generate(Collection $records, array $columns, string $delimiter)` — utilisé en fallback/alternative à `UserExporter` (Filament natif). |
 | `DecisionService.php` | P6 | Génère/exporte les décisions (`exportCsv`…). |
 | `NotificationService.php` | P6 | Envoie invitations / notifications de réunion (mail + base). |
 | `RapportService.php` | P7 | `generer`/`genererEnMasse`/`apercuHtml` d'un état → PDF via le package, archivé dans la mallette. |
@@ -178,10 +206,12 @@ Configuration « classique » Laravel + configurations métier :
 | `2026_09_13_000001_add_role_to_users_table.php` | P1 | Colonne `role` (enum). |
 | `2026_09_13_000002_create_notifications_table.php` | P1 | Notifications (canal database). |
 | `2026_09_14_000001_create_decision_templates_table.php` | P4 | Modèles de décision. |
+| `2026_09_14_000002_create_exports_table.php` | **P9** | Table `exports` de Filament (suivi des exports natifs `UserExporter`). |
 | `2026_09_15_000001_create_institution_hierarchy_tables.php` | P3 | Universités → écoles → établissements → commissions. |
 | `2026_09_16_000001_create_reunions_module_tables.php` | P6 | Module Réunions (réunions, dossiers, invitations, présences, décisions, ODJ). |
 | `2026_09_20_000001_create_archivage_rapports_tables.php` | P7 | Archivage + audit (documents, document_versions, rapport_etats, audit_logs). |
 | `2026_09_21_000001_create_workflow_engine_tables.php` | P8 | Moteur workflow (definitions, transitions, guards, instances, audit_trails) + réclamations + réservations. |
+| `2026_09_22_000001_add_import_fields_to_users_and_dossiers.php` | **P9** | Import moulinet : `users.grade`, `users.structure_recherche`, `users.etablissement_id` (FK), `dossiers.directeur_id` (FK). |
 
 ### `database/factories/`
 Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFactory`, `InvitationFactory`, `PresenceFactory`, `DecisionFactory`, `DecisionTemplateFactory`, `OdjTemplateFactory`, fact. hiérarchie `Universite/EcoleDoctorale/Etablissement/Commission`, `ReclamationFactory`, `ReservationFactory`, `WorkflowDefinitionFactory`).
@@ -198,9 +228,10 @@ Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFact
 ## 5. `docs/`
 | Fichier | Rôle |
 | --- | --- |
-| `bugs-and-solutions.md` | Registre des **vrais bugs/obstacles** par étape (cause racine + solution + leçon). P1→P7 documentés. |
+| `bugs-and-solutions.md` | Registre des **vrais bugs/obstacles** par étape (cause racine + solution + leçon). P1→P9 documentés. |
 | `commands-used.md` | Commandes **exactes** utilisées par étape (tests ciblés, migrate, make:filament-*, pint…). |
 | `structure-du-projet.md` | Ce document. |
+| `transformation-modules-interopérables.md` | Analyse de faisabilité « monolithe → modules interopérables » (diagnostic, 7 étapes, effort 4-6 semaines, risques) — rédigé fin P8. |
 
 ---
 
@@ -210,7 +241,7 @@ Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFact
 | `public/index.php` | Front controller. |
 | `public/build/` | Assets compilés (Vite). |
 | `public/css/filament/`, `public/js/filament/`, `public/fonts/filament/` | Assets **publiés** par Filament. |
-| `resources/views/` | Vues Blade : `welcome.blade.php`, `emails/reunion/convocation`, `emails/workflow/state-changed`, pages custom Filament Réunions (`filament/resources/reunions/pages/*`). |
+| `resources/views/` | Vues Blade : `welcome.blade.php`, `emails/reunion/convocation`, `emails/workflow/state-changed`, `filament/pages/imports/importer.blade.php` **(P9)**, pages custom Filament Réunions (`filament/resources/reunions/pages/*`). |
 | `resources/css/`, `resources/js/` | Entrées Vite de l'app. |
 
 ---
@@ -218,7 +249,7 @@ Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFact
 ## 7. `routes/`
 | Fichier | Rôle |
 | --- | --- |
-| `web.php` | Routes web hors-Filament (aperçu/PDF rapports gardés par policy). |
+| `web.php` | Routes web hors-Filament (aperçu/PDF rapports gardés par policy, redirection `/login` → `/admin/login`). |
 | `console.php` | Commandes artisan (dont programmes planifiés). |
 
 ---
@@ -233,6 +264,9 @@ Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFact
 | P6 | `ReunionsModuleTest.php` | Module Réunions (9 tests). |
 | P7 | `P7ArchivageAuditTest.php` | Archivage, audit append-only, rapports/états, batch 50, routes web. |
 | P8 | `P8WorkflowEngineTest.php` | Moteur : parcours A/B/C complets, transition déclarée sans code, chevauchement jury/salles bloqué. |
+| **P9** | `P9ChecklistCdcTest.php` | **Checklist CDC §6** : recherche multicritères OR, filtre Sessions/Groupes, tri asc/desc, BulkAction email (tags + Policies), `UserExporter`/`CsvExportService`, RBAC filtres. |
+| **P9** | `ImportMoulinetTest.php` | **Moulinet d'import** : CSV/XLSX/XML/JSON, aliases insensibles à la casse, validate-then-commit, transaction unique, `EnseignantImport` + `TheseImport`. |
+| **P9** | `ImportPagesTest.php` | Pages Filament d'import (`ImportEnseignants`/`ImportTheses`) : upload, mapping, droits. |
 | — | `ExampleTest.php` (Feature/Unit) | Tests de démonstration Laravel (neutres). |
 | — | `Pest.php`, `TestCase.php` | Configuration Pest / TestCase. |
 
@@ -258,12 +292,17 @@ Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFact
 | `AGENTS.md` / `CLAUDE.md` | Guidelines pour les agents (Boost, conventions). |
 | `boost.json` | Configuration **Laravel Boost** (agents cibles, skill activés, cloud/MCP). |
 | `.mcp.json` | Serveurs MCP (ici `laravel-boost` → `php artisan boost:mcp`). |
-| `composer.json` / `composer.lock` | Dépendances PHP (dont `salsabil-ennaiem/pv-module`, `filament/filament`, `laravel/boost`). |
+| `composer.json` / `composer.lock` | Dépendances PHP (dont `salsabil-ennaiem/pv-module`, `filament/filament`, `laravel/boost`). P9 : dépendances d'import (`openspout` via moulinet) si ajoutées. |
 | `package.json` / `package-lock.json` / `vite.config.js` / `.npmrc` | Dépendances JS + build Vite. |
 | `.env` / `.env.example` | Configuration locale (ne pas versionner `.env`). |
 | `phpunit.xml` | Config des tests. |
 | `artisan` | CLI Laravel. |
 | `.gitattributes`, `.gitignore`, `.editorconfig` | Normalisation Git/éditeur. |
+
+### Livrables CDC §5
+| Dossier | Rôle |
+| --- | --- |
+| `livrables_cdc5/` | Arborescence `01_sources_application` → `07_licence_identite` + `archive/` conforme au CDC §5 (contenu documentaire, captures, graphiques, sources app + package). Non déployé, hors `public/`. |
 
 ---
 
@@ -278,7 +317,7 @@ Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFact
 
 | Fichier | Utile encore ? |
 | --- | --- |
-| `app/Services/.gitkeep` | Non (dossier rempli en P7/P8) — supprimable. |
+| `app/Services/.gitkeep` | Non (dossier rempli en P7/P8/P9) — supprimable. |
 | `app/PvRules/.gitkeep` | Non (dossier rempli en P5). |
 | `app/Filament/Resources/Reunions/.gitkeep` | Non (dossier rempli en P6). |
 | `app/Filament/Resources/Commissions/.gitkeep` | Non (dossier rempli en P3/P6). |
@@ -287,10 +326,11 @@ Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFact
 ---
 
 ## 11. Réponse courte — « l'architecture est-elle un développement par module interopérable ? »
-Voir le dialogue associé. En résumé : **ce n'est PAS une architecture « modules packagés interopérables » au sens SOA/plugins**, c'est un **monolithe Laravel fortement modulaire** :
+Voir `docs/transformation-modules-interopérables.md` et le dialogue associé. En résumé : **ce n'est PAS une architecture « modules packagés interopérables » au sens SOA/plugins**, c'est un **monolithe Laravel fortement modulaire** :
 
-- **1 seul artefact déployable** : l'app `uma`. Les « modules » (Réunions, Archivage, Workflows, RBAC) sont des **dossiers cohérents du monolithe** (`app/Services`, `app/Filament/Resources/…`), pas des paquets indépendants réutilisables ailleurs.
+- **1 seul artefact déployable** : l'app `uma`. Les « modules » (Réunions, Archivage, Workflows, RBAC, Imports P9) sont des **dossiers cohérents du monolithe** (`app/Services`, `app/Filament/Resources/…`, `app/Imports`), pas des paquets indépendants réutilisables ailleurs.
 - **Interopérabilité réelle et revendiquée** : au niveau du **package `pv-module`** (Composer, depuis Packagist) et de ses **contrats** (`CanManagePv`, `ApprovalRules`, `ParticipantResolver`, `SignatureStrategy`). C'est là que vit le vrai couplage « par contrat → implémentation interchangeable » (divers signatures, bascule quorum/unanime).
 - Le moteur de workflow P8 étend cette logique : **transitions/gardes/actions paramétrées en base** → l'ajout d'un workflow ne nécessite plus de code ; c'est une forme de « module » par données, mais toujours à l'intérieur du même monolithe.
+- **P9 ne change pas ce constat** : `BaseImport`/`CsvExportService`/`SendEmailBulkAction` restent des briques du monolithe (pas de packages extraits). La feuille de route d'extraction (4-6 semaines) reste post-recette, voir `transformation-modules-interopérables.md` §4-5.
 
 **Conclusion** : architecture = **monolithe modulaire + un package externe interopérable** (point d'extension par contrat). Pas d'indépendance de déploiement/réutilisation entre les modules internes — le qualificatif « interopérable » est vrai surtout pour `pv-module`, pas pour les modules de l'app.
