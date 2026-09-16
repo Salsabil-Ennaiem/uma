@@ -1,0 +1,247 @@
+# salsabil-ennaiem/pv-module
+
+Moteur générique de **documents de travail** pour Laravel : workflow complet (brouillon → en attente → valide), versions, signatures, notifications et génération PDF.
+
+Bien que nommé `pv-module` (routes/vues « procès-verbaux »), c'est un **moteur de documents réutilisable** : `config('pv-module.types')` permet de déclarer n'importe quel type (commission, jury, délibération, conventions…). Aujourd'hui seul `pv` est fourni par défaut.
+
+## Fonctionnalités
+
+- **Workflow complet** : création, brouillon, envoi aux participants, validation, signature, archivage.
+- **Versions & historiques** : chaque modification enregistre une version consultable.
+- **Signatures & validation** : signature dessinée/téléchargée, règles d'approbation configurables.
+- **Trace de conformité des signatures (R2)** : chaque signature enregistre son **mécanisme**
+  (`signed_mechanism`, défaut `simple_image`) et son **horodatage** (`signed_at`) en base, et les
+  reporte dans le PDF généré.
+- **RTL / arabe (R3)** : rendu des textes arabes longs (≥ 200 caractères) avec directionnalité
+  `dir="rtl"` / `direction: rtl` via mPDF (`autoScriptToLang`, `autoLangToFont`, `autoArabic`,
+  police `dejavusans`).
+- **Notifications** par email + canal `database`.
+- **Génération PDF** via mPDF (template personnalisable).
+- **Templates réutilisables** + seeder par défaut.
+- **Personnalisable par contrats** : l'hôte adapte RBAC, résolution des participants et règles d'approbation sans toucher au code.
+- **Multilingue** : fr / ar / en, vues / config / migrations publishables.
+- **Multi-types** : déclarable dans `config/pv-module.php` (commission, jury, délibération…).
+
+## Prérequis (obligatoire)
+
+Le module exige que l'utilisateur soit **connecté** : toutes les routes sont protégées par le middleware `auth`. Votre application doit donc fournir :
+
+1. **Une authentification** — Breeze, Jetstream, ou votre propre système.
+2. **Une route nommée `login`** — `Route::get('/login', ...)->name('login')`. Avec Breeze c'est automatique.
+
+### Symptôme typique sans route de login
+
+```
+Symfony\Component\Routing\Exception\RouteNotFoundException
+Route [login] not defined.
+GET /pv-module → 500
+```
+
+- **Cause** : un visiteur non connecté accède au module ; Laravel veut le rediriger vers la route de login, qui n'existe pas dans votre app.
+- **Solution** : créer une route nommée `login` (ou installer pack d'authentifier). Le middleware `auth` du module fonctionne alors normalement.
+- **Si votre app gère l'auth différemment**, remplacez le middleware par le vôtre dans `config/pv-module.php` :
+
+```php
+'routes' => [
+    'prefix'      => 'pv-module',
+    'name_prefix' => 'pv-module.',
+    'middleware'  => ['web', 'your.auth'], // par défaut : ['web', 'auth']
+],
+```
+
+## Démarrage rapide
+
+Ordre exact pour une première installation sans erreur  :
+
+```bash
+# 1. Application Laravel avec authentification
+composer create-project laravel/laravel mon-app
+--- installer votre pack pour authentifier ou bien le crée ---
+npm install && npm run build
+php artisan migrate
+
+# 2. Installer le module
+composer require salsabil-ennaiem/pv-module
+php artisan migrate
+php artisan db:seed --class="SalsabilEnnaiem\PvModule\Seeders\DefaultPvTemplateSeeder"
+php artisan storage:link
+
+# 3. Se connecter puis accéder
+# http://mon-app.test/pv-module
+```
+
+## Installation
+
+```bash
+composer require salsabil-ennaiem/pv-module
+```
+
+## Configuration
+
+Publiez la config, les migrations, les vues et la langue :
+
+```bash
+php artisan vendor:publish --provider="SalsabilEnnaiem\PvModule\PvModuleServiceProvider"
+```
+
+Ou par tags, selon vos besoins :
+
+```bash
+php artisan vendor:publish --tag=pv-config        # config/pv-module.php
+php artisan vendor:publish --tag=pv-migrations     # database/migrations
+php artisan vendor:publish --tag=pv-views          # resources/views/vendor/pv-module
+php artisan vendor:publish --tag=pv-lang           # lang/vendor/pv-module
+```
+
+```php
+// config/pv-module.php
+return [
+    'user_model' => \App\Models\User::class,   // modèle de l'app hôte (jamais un modèle du module)
+
+    'routes' => [
+        'prefix'      => 'pv-module',           // URL du module
+        'name_prefix' => 'pv-module.',
+        'middleware'  => ['web', 'auth'],       // protection des routes
+    ],
+
+    'storage_disk' => 'local',                  // 'local' = privé (prod) | 'public' = accessible (démo)
+
+    // Implémentations des contrats — remplaçables par vos propres classes
+    'can_manage_pv'        => \SalsabilEnnaiem\PvModule\Defaults\DefaultPvRules::class,
+    'approval_rules'       => \SalsabilEnnaiem\PvModule\Defaults\DefaultApprovalRules::class,
+    'participant_resolver' => \SalsabilEnnaiem\PvModule\Defaults\DefaultParticipantResolver::class,
+
+    'max_signature_size_kb' => 2048,
+    'allowed_signature_mimes' => ['image/jpeg', 'image/png', 'image/gif'],
+
+    // Trace de conformité des signatures (R2)
+    'signature_mechanism' => 'simple_image',    // mécanisme enregistré dans signed_mechanism + reporté au PDF
+
+    // Rendu PDF / directionnalité (R3)
+    'default_locale' => 'fr',                   // langue par défaut des documents (attribut html lang)
+    'rtl_locales'    => ['ar', 'he', 'fa', 'ur'], // locales rendues de droite à gauche (dir=rtl)
+
+    // Types de documents déclarables
+    'types' => ['pv'],                          // 'pv', 'commission', 'jury', 'deliberation'…
+];
+```
+
+### Détail des clés de configuration
+
+| Clé | Type | Défaut | Rôle |
+|---|---|---|---|
+| `user_model` | `class-string` | `App\Models\User` | Modèle utilisateur de l'hôte (jamais un modèle du module). |
+| `routes.prefix` | `string` | `pv-module` | Préfixe d'URL du module. |
+| `routes.name_prefix` | `string` | `pv-module.` | Préfixe des noms de routes. |
+| `routes.middleware` | `array` | `['web','auth']` | Middlewares appliqués aux routes (l'hôte peut remplacer `auth`). |
+| `storage_disk` | `string` | `local` | Disque Laravel où sont stockées les images de signature. |
+| `can_manage_pv` | `class-string` | `DefaultPvRules` | Contrat RBAC (créer/envoyer/valider/signer/supprimer). |
+| `approval_rules` | `class-string` | `DefaultApprovalRules` | Contrat de règles de passage à « validé ». |
+| `participant_resolver` | `class-string` | `DefaultParticipantResolver` | Contrat de résolution/normalisation des participants. |
+| `max_signature_size_kb` | `int` | `2048` | Taille maximale du fichier de signature. |
+| `allowed_signature_mimes` | `array` | `jpeg,png,gif` | Formats d'image de signature acceptés. |
+| `signature_mechanism` | `string` | `simple_image` | Mécanisme de signature enregistré (`signed_mechanism`) et affiché dans le PDF (R2). |
+| `default_locale` | `string` | `fr` | Locale par défaut des documents générés (R3). |
+| `rtl_locales` | `array` | `ar,he,fa,ur` | Locales rendues de droite à gauche (`dir="rtl"`) (R3). |
+| `types` | `array` | `['pv']` | Types de documents déclarés. |
+
+## Personnalisation pour vos besoins
+
+Le module est conçu pour s'adapter **sans modification de son code**. Voici les 4 leviers, du plus simple au plus avancé :
+
+### 1. Régler la config (sans coder)
+
+- **URL / routes** : `routes.prefix`, `routes.middleware` — ex. mettre le module sous `/admin/documents`.
+- **Types de documents** : ajouter `'commission'`, `'jury'`… dans `types`. Chaque type aura ses propres PV, templates et PDF.
+- **Signature** : tailles max et formats d'image acceptés.
+- **Stockage** : `storage_disk` (privé recommandé en prod, `public` pratique en dev).
+
+### 2. Remplacer les contrats (votre logique métier)
+
+Chaque colonne vertébrale du moteur est une interface dans `src/Contracts/`, implémentable par vos propres classes :
+
+```php
+// app/Providers/AppServiceProvider.php
+public function register(): void
+{
+    $this->app->bind(
+        \SalsabilEnnaiem\PvModule\Contracts\ParticipantResolver::class,
+        \App\Services\MyParticipantResolver::class,
+    );
+
+    $this->app->bind(
+        \SalsabilEnnaiem\PvModule\Contracts\CanManagePv::class,
+        \App\Services\MyPvRules::class,
+    );
+
+    $this->app->bind(
+        \SalsabilEnnaiem\PvModule\Contracts\ApprovalRules::class,
+        \App\Services\MyApprovalRules::class,
+    );
+}
+```
+
+| Contrat | Rôle | Exemple de personnalisation |
+|---|---|---|
+| `CanManagePv` | RBAC : qui peut créer, envoyer, valider, signer, supprimer… | N'autoriser que les rôles `admin` / `secretaire` |
+| `ApprovalRules` | Règles de passage à « valide » | Exiger X validations avant signature |
+| `ParticipantResolver` | Résolution/normalisation des participants | Résoudre les participants depuis une table métier |
+
+Implémentez l'interface, adaptez les signatures aux méthodes du contrat, et un **simple `bind`** suffit : le module utilise vos classes partout.
+
+### 3. Surcharger les vues et le PDF
+
+Première étape, récupérez les vues du module dans votre app, puis modifiez-les librement (marque, CSS, champs) :
+
+```bash
+php artisan vendor:publish --tag=pv-views
+```
+
+Le template PDF est généré via mPDF et personnalisable de la même façon (publié avec les vues ou remplacé dans votre code).
+
+### 4. Gérer les templates de documents
+
+Les templates réutilisables (le contenu de base de vos PV) sont gérés par le module : le seeder fournit un template par défaut, et votre application peut en créer/sélectionner d'autres via l'interface du module (pour chaque type déclaré).
+
+## Routes
+
+Prefix par défaut : `pv-module` (configurable via `routes.prefix`). Les routes chargent les contrôleurs sous `SalsabilEnnaiem\PvModule\Http\Controllers`.
+
+## Langues
+
+Chargées automatiquement en JSON (`ar.json`, `en.json`, `fr.json`). Publiez-les pour les surcharger :
+
+```bash
+php artisan vendor:publish --tag=pv-lang
+```
+
+## Limite de conformité
+
+- **Signature simple uniquement.** Le mécanisme livré est `simple_image` : une image apposée
+  accompagnée d'un horodatage (`signed_at`). Ce n'est **pas** une signature qualifiée (eIDAS/PKI).
+- L'architecture est **prête pour une signature qualifiée** : le mécanisme est déjà une donnée
+  (`signed_mechanism`) et la bascule se fera via une `SignatureStrategy` (voir P8) sans migration
+  destructive.
+- Décisions et mécanismes de bascule détaillés dans [`ASSUMPTIONS.md`](ASSUMPTIONS.md) — notamment
+  **ID-01** (propriété intellectuelle / namespace), **ID-02** (signature) et **ID-03** (RTL).
+
+## Tests
+
+```bash
+composer test
+```
+
+La suite couvre le workflow, la sécurité, la **trace de conformité des signatures** (R2) et le
+**rendu RTL arabe** (R3). Des artefacts de recette sont générés sous `tests/artifacts/`
+(`arabic_pv_sample.pdf`, `arabic_pv_preview.html`, `arabic_pv_preview.png`).
+
+## Conformité & registre de décisions (P10)
+
+Registre consolidé des décisions app + package (P10, à acter auprès de l'UMA) :
+`../../../DECISIONS_UMA.md` (racine du monolithe Voyager). Hypothèses du package :
+[`ASSUMPTIONS.md`](ASSUMPTIONS.md) — **ID-01** (PI/namespace, R1), **ID-02** (signature, R2),
+**ID-03** (RTL, R3). État au 2026-09-15 : défauts sûrs appliqués, décisions planifiées.
+
+## Licence
+
+Publié sous licence MIT. Voir `LICENSE`.

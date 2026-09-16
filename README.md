@@ -70,7 +70,24 @@ Cible : **🟦 NOUVELLE APPLICATION** — module réécrit en Filament (référe
 - **Ressources Filament** (générées CLI `--generate`, personnalisées ensuite) : `Reunions/ReunionResource` + `Schemas/ReunionForm` + `Tables/ReunionsTable` (badges statut, filtres statut/commission, `TrashedFilter` corbeille), `Dossiers/*`, `Decisions/*` (colonne décideur). Pages custom : `ManageReunionPresences`, `ManageReunionDecisions` (RBAC en `mount`), `ReunionCorbeille` (restore/force delete, admin), pages statut + « Générer le PV » dans `EditReunion`, export décisions CSV.
 - **Policies RBAC** : admin tout ; président de SA commission ; gestionnaire école ; agent administratif (création, présence, décisions) ; membre vue seulement ; doctorant vue de sa propre décision ; fail-closed ; `genererPv` = réunion passée + contrat package `CanManagePv`.
 - **Notifications** : `ReunionPlanifiee`/`ReunionTerminee` (base) + `Mail/ReunionConvocation` + vue markdown `emails/reunion/convocation.blade.php` (canal mail unique).
-- **Tests** : `tests/Feature/ReunionsModuleTest.php` (9 tests — parcours complet création→convocation→présences→décisions→terminer→PV, transitions invalides, RBAC par rôle, corbeille, mallette décision, anti-IDOR commission, smoke Filament 200/403). Suite complète : **47 tests / 239 assertions**.
+- **Tests** : `tests/Feature/ReunionsModuleTest.php` (9 tests — parcours complet création→convocation→présences→décisions→terminer→PV, transitions invalides, RBAC par rôle, corbeille, mallette décision, anti-IDOR commission, smoke Filament 200/403). Suite complète : **87 tests / 429 assertions** (vert le 2026-09-15 ; lancer `composer test`).
+
+## Conformité & décisions UMA (P10 — clôture)
+
+État au **2026-09-15** : UMA injoignable — décisions **A1 levée par défaut sûr**, P9 clôturé.
+Registre consolidé app + package : `../voyager/DECISIONS_UMA.md` · dossier de réunion :
+`../voyager/docs/DOSSIER_RE_SOLLICITATION_UMA.md`.
+Livrables CDC §5 (manifeste, rapport de recette P9, dossier de déploiement CCK/RNU,
+identité de livraison A1, archive ZIP) : **`livrables_cdc5/`**.
+
+| Risque | Défaut sûr appliqué | Décision UMA à acter |
+|---|---|---|
+| **R1 — PI** | namespace `SalsabilEnnaiem` + cession par contrat — **levé** (identité en `livrables_cdc5/07`) | nom/licence/dépôt de livraison (si reconsidération) |
+| **R2 — Signature** | `simple_image` + trace (mécanisme + horodatage) | niveau de conformité (simple vs qualifiée eIDAS) |
+| **R3 — RTL** | templates FR/AR confinés aux vues (`dir="rtl"`) | conformité des modèles officiels UMA |
+| **Workflow** | définitions/seuils paramétrés en base | validation définitions A/B/C + seuils JORT |
+
+Mise à jour avec date + responsable à la clôture (chaque ligne : `validée` / `amendée` / `à corriger`).
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>

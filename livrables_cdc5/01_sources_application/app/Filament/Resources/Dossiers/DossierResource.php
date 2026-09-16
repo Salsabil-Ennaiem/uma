@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Filament\Resources\Dossiers;
+
+use App\Filament\Resources\Dossiers\Pages\CreateDossier;
+use App\Filament\Resources\Dossiers\Pages\EditDossier;
+use App\Filament\Resources\Dossiers\Pages\ListDossiers;
+use App\Filament\Resources\Dossiers\RelationManagers\DecisionsRelationManager;
+use App\Filament\Resources\Dossiers\RelationManagers\DocumentsRelationManager;
+use App\Filament\Resources\Dossiers\Schemas\DossierForm;
+use App\Filament\Resources\Dossiers\Tables\DossiersTable;
+use App\Models\Dossier;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class DossierResource extends Resource
+{
+    protected static ?string $model = Dossier::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolder;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Réunions';
+
+    protected static ?string $recordTitleAttribute = 'objet';
+
+    public static function form(Schema $schema): Schema
+    {
+        return DossierForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return DossiersTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            DocumentsRelationManager::class,
+            DecisionsRelationManager::class,
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListDossiers::route('/'),
+            'create' => CreateDossier::route('/create'),
+            'edit' => EditDossier::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        return parent::getRecordRouteBindingEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
+}
