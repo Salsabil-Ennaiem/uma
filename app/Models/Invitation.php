@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Invitation extends Model
 {
+    protected $table = 'uma_invitations';
+
     protected $fillable = [
         'reunion_id',
         'participant_id',

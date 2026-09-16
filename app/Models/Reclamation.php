@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 class Reclamation extends Model
 {
+    protected $table = 'uma_reclamations';
+
     use HasFactory;
 
     protected $fillable = [

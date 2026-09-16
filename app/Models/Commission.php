@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['etablissement_id', 'president_id', 'nom', 'discipline', 'is_active'])]
 class Commission extends Model
 {
+    protected $table = 'uma_commissions';
+
     use HasFactory;
 
     protected function casts(): array

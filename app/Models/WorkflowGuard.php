@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class WorkflowGuard extends Model
 {
+    protected $table = 'uma_workflow_guards';
+
     use HasFactory;
 
     protected $fillable = [

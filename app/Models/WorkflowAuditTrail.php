@@ -13,6 +13,8 @@ use LogicException;
  */
 class WorkflowAuditTrail extends Model
 {
+    protected $table = 'uma_workflow_audit_trails';
+
     public const UPDATED_AT = null;
 
     protected $fillable = [

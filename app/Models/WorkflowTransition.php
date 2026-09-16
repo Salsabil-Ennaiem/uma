@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class WorkflowTransition extends Model
 {
+    protected $table = 'uma_workflow_transitions';
+
     use HasFactory;
 
     protected $fillable = [

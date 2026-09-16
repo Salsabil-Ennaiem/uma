@@ -13,9 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Reservation extends Model
 {
+    protected $table = 'uma_reservations';
+
     use HasFactory;
 
     public const TYPE_SALLE = 'salle';
+
     public const TYPE_JURY = 'jury';
 
     protected $fillable = [

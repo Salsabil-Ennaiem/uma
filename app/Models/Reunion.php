@@ -14,6 +14,8 @@ use SalsabilEnnaiem\PvModule\Models\Pv;
 
 class Reunion extends Model
 {
+    protected $table = 'uma_reunions';
+
     use HasFactory;
     use SoftDeletes;
 

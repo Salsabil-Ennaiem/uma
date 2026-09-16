@@ -14,6 +14,8 @@ use LogicException;
  */
 class DocumentVersion extends Model
 {
+    protected $table = 'uma_document_versions';
+
     use HasFactory;
 
     public const UPDATED_AT = null;

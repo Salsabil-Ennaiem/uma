@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Document extends Model
 {
+    protected $table = 'uma_documents';
+
     use HasFactory;
 
     protected $fillable = [

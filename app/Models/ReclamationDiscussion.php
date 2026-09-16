@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ReclamationDiscussion extends Model
 {
+    protected $table = 'uma_reclamation_discussions';
+
     public const UPDATED_AT = null;
 
     protected $fillable = [

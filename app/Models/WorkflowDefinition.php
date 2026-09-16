@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class WorkflowDefinition extends Model
 {
+    protected $table = 'uma_workflow_definitions';
+
     use HasFactory;
 
     protected $fillable = [

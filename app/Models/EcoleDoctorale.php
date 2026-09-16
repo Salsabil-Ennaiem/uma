@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['universite_id', 'nom'])]
 class EcoleDoctorale extends Model
 {
+    protected $table = 'uma_ecole_doctorales';
+
     use HasFactory;
 
     public function universite(): BelongsTo

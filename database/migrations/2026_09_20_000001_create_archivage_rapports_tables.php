@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('documents', function (Blueprint $table) {
+        Schema::create('uma_documents', function (Blueprint $table) {
             $table->id();
             $table->morphs('documentable');
             $table->string('type');
@@ -24,9 +24,9 @@ return new class extends Migration
             $table->index('retention_until');
         });
 
-        Schema::create('document_versions', function (Blueprint $table) {
+        Schema::create('uma_document_versions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('document_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('document_id')->constrained('uma_documents')->cascadeOnDelete();
             $table->unsignedInteger('version');
             $table->string('file_path');
             $table->string('file_name');
@@ -40,7 +40,7 @@ return new class extends Migration
             $table->unique(['document_id', 'version']);
         });
 
-        Schema::create('rapport_etats', function (Blueprint $table) {
+        Schema::create('uma_rapport_etats', function (Blueprint $table) {
             $table->id();
             $table->string('label');
             $table->string('type')->default('etat');
@@ -58,8 +58,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rapport_etats');
-        Schema::dropIfExists('document_versions');
-        Schema::dropIfExists('documents');
+        Schema::dropIfExists('uma_rapport_etats');
+        Schema::dropIfExists('uma_document_versions');
+        Schema::dropIfExists('uma_documents');
     }
 };

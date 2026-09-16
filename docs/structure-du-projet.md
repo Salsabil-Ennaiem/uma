@@ -198,20 +198,25 @@ Configuration « classique » Laravel + configurations métier :
 
 ## 4. `database/`
 ### `database/migrations/`
+> **Convention de préfixe `uma_`** (ADR-0003) : les tables **métier** portent le préfixe
+> `uma_` ; les tables framework/vendor (`users`, `sessions`, `cache*`, `jobs*`, `notifications`,
+> `exports`, `migrations`…), les pivots (`commission_user`, `reunion_dossier`) et le package
+> `pv_module_*` **ne sont pas préfixés**.
+
 | Migration | Étape | Contenu |
 | --- | --- | --- |
-| `0001_01_01_000000_create_users_table.php` | socle | Table `users`. |
+| `0001_01_01_000000_create_users_table.php` | socle | Table `users` (sans préfixe). |
 | `0001_01_01_000001_create_cache_table.php` | socle | Cache. |
 | `0001_01_01_000002_create_jobs_table.php` | socle | Files de jobs. |
 | `2026_09_13_000001_add_role_to_users_table.php` | P1 | Colonne `role` (enum). |
 | `2026_09_13_000002_create_notifications_table.php` | P1 | Notifications (canal database). |
-| `2026_09_14_000001_create_decision_templates_table.php` | P4 | Modèles de décision. |
+| `2026_09_14_000001_create_decision_templates_table.php` | P4 | Modèles de décision (`uma_decision_templates`). |
 | `2026_09_14_000002_create_exports_table.php` | **P9** | Table `exports` de Filament (suivi des exports natifs `UserExporter`). |
-| `2026_09_15_000001_create_institution_hierarchy_tables.php` | P3 | Universités → écoles → établissements → commissions. |
-| `2026_09_16_000001_create_reunions_module_tables.php` | P6 | Module Réunions (réunions, dossiers, invitations, présences, décisions, ODJ). |
-| `2026_09_20_000001_create_archivage_rapports_tables.php` | P7 | Archivage + audit (documents, document_versions, rapport_etats, audit_logs). |
-| `2026_09_21_000001_create_workflow_engine_tables.php` | P8 | Moteur workflow (definitions, transitions, guards, instances, audit_trails) + réclamations + réservations. |
-| `2026_09_22_000001_add_import_fields_to_users_and_dossiers.php` | **P9** | Import moulinet : `users.grade`, `users.structure_recherche`, `users.etablissement_id` (FK), `dossiers.directeur_id` (FK). |
+| `2026_09_15_000001_create_institution_hierarchy_tables.php` | P3 | Universités → écoles → établissements → commissions (`uma_universites`, `uma_ecole_doctorales`, `uma_etablissements`, `uma_commissions` ; pivot `commission_user` sans préfixe). |
+| `2026_09_16_000001_create_reunions_module_tables.php` | P6 | Module Réunions (`uma_reunions`, `uma_dossiers`, `uma_invitations`, `uma_presences`, `uma_decisions`, `uma_odj_templates`, `uma_audit_logs` ; pivot `reunion_dossier` sans préfixe). |
+| `2026_09_20_000001_create_archivage_rapports_tables.php` | P7 | Archivage + audit (`uma_documents`, `uma_document_versions`, `uma_rapport_etats`). |
+| `2026_09_21_000001_create_workflow_engine_tables.php` | P8 | Moteur workflow (`uma_workflow_*`) + réclamations (`uma_reclamations`, `uma_reclamation_discussions`) + réservations (`uma_reservations`). |
+| `2026_09_22_000001_add_import_fields_to_users_and_dossiers.php` | **P9** | Import moulinet : `users.grade`, `users.structure_recherche`, `users.etablissement_id` (FK → `uma_etablissements`), `dossiers.directeur_id` (FK → `users`). |
 
 ### `database/factories/`
 Une factory par modèle principal (`UserFactory`, `DossierFactory`, `ReunionFactory`, `InvitationFactory`, `PresenceFactory`, `DecisionFactory`, `DecisionTemplateFactory`, `OdjTemplateFactory`, fact. hiérarchie `Universite/EcoleDoctorale/Etablissement/Commission`, `ReclamationFactory`, `ReservationFactory`, `WorkflowDefinitionFactory`).

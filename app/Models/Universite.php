@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['nom', 'code'])]
 class Universite extends Model
 {
+    protected $table = 'uma_universites';
+
     use HasFactory;
 
     public function ecoleDoctorales(): HasMany

@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class RapportEtat extends Model
 {
+    protected $table = 'uma_rapport_etats';
+
     use HasFactory;
 
     protected $fillable = [

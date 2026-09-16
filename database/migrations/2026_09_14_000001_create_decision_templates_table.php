@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('decision_templates', function (Blueprint $table) {
+        Schema::create('uma_decision_templates', function (Blueprint $table) {
             $table->id();
             $table->string('label');
             $table->text('description')->nullable();
@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('decision_templates');
+        Schema::dropIfExists('uma_decision_templates');
     }
 };

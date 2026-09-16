@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class WorkflowInstance extends Model
 {
+    protected $table = 'uma_workflow_instances';
+
     use HasFactory;
 
     protected $fillable = [

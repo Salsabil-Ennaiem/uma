@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OdjTemplate extends Model
 {
+    protected $table = 'uma_odj_templates';
+
     use HasFactory;
 
     protected $fillable = [

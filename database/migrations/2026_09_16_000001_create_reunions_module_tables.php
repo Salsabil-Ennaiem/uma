@@ -8,23 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('odj_templates', function (Blueprint $table) {
+        Schema::create('uma_odj_templates', function (Blueprint $table) {
             $table->id();
             $table->string('label');
             $table->text('description')->nullable();
             $table->text('contenu');
-            $table->foreignId('commission_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('commission_id')->nullable()->constrained('uma_commissions')->nullOnDelete();
             $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
 
-        Schema::create('reunions', function (Blueprint $table) {
+        Schema::create('uma_reunions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('commission_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('commission_id')->constrained('uma_commissions')->cascadeOnDelete();
             $table->string('objet');
             $table->text('description')->nullable();
-            $table->foreignId('odj_template_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('odj_template_id')->nullable()->constrained('uma_odj_templates')->nullOnDelete();
             $table->longText('ordre_du_jour')->nullable();
             $table->dateTime('date_debut');
             $table->dateTime('date_fin')->nullable();
@@ -38,9 +38,9 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('invitations', function (Blueprint $table) {
+        Schema::create('uma_invitations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reunion_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('reunion_id')->constrained('uma_reunions')->cascadeOnDelete();
             $table->foreignId('participant_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('email')->nullable();
             $table->string('statut')->default('en_attente');
@@ -55,9 +55,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('presences', function (Blueprint $table) {
+        Schema::create('uma_presences', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reunion_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('reunion_id')->constrained('uma_reunions')->cascadeOnDelete();
             $table->foreignId('participant_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('email')->nullable();
             $table->string('statut')->default('absent');
@@ -68,10 +68,10 @@ return new class extends Migration
             $table->unique(['reunion_id', 'participant_id', 'email']);
         });
 
-        Schema::create('dossiers', function (Blueprint $table) {
+        Schema::create('uma_dossiers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('doctorant_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('commission_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('commission_id')->nullable()->constrained('uma_commissions')->nullOnDelete();
             $table->string('objet');
             $table->text('description')->nullable();
             $table->string('statut')->default('en_attente');
@@ -81,21 +81,21 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('reunion_dossier', function (Blueprint $table) {
+Schema::create('reunion_dossier', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reunion_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('dossier_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('reunion_id')->constrained('uma_reunions')->cascadeOnDelete();
+            $table->foreignId('dossier_id')->constrained('uma_dossiers')->cascadeOnDelete();
             $table->unsignedInteger('position')->default(0);
             $table->timestamps();
 
             $table->unique(['reunion_id', 'dossier_id']);
         });
 
-        Schema::create('decisions', function (Blueprint $table) {
+        Schema::create('uma_decisions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reunion_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('dossier_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('decision_template_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('reunion_id')->constrained('uma_reunions')->cascadeOnDelete();
+            $table->foreignId('dossier_id')->nullable()->constrained('uma_dossiers')->cascadeOnDelete();
+            $table->foreignId('decision_template_id')->nullable()->constrained('uma_decision_templates')->nullOnDelete();
             $table->string('label');
             $table->string('email_subject')->nullable();
             $table->text('email_body')->nullable();
@@ -104,7 +104,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('audit_logs', function (Blueprint $table) {
+        Schema::create('uma_audit_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('action');
@@ -119,13 +119,13 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('audit_logs');
-        Schema::dropIfExists('decisions');
+        Schema::dropIfExists('uma_audit_logs');
+        Schema::dropIfExists('uma_decisions');
         Schema::dropIfExists('reunion_dossier');
-        Schema::dropIfExists('dossiers');
-        Schema::dropIfExists('presences');
-        Schema::dropIfExists('invitations');
-        Schema::dropIfExists('reunions');
-        Schema::dropIfExists('odj_templates');
+        Schema::dropIfExists('uma_dossiers');
+        Schema::dropIfExists('uma_presences');
+        Schema::dropIfExists('uma_invitations');
+        Schema::dropIfExists('uma_reunions');
+        Schema::dropIfExists('uma_odj_templates');
     }
 };

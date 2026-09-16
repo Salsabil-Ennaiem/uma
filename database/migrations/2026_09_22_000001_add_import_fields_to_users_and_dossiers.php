@@ -12,10 +12,10 @@ return new class extends Migration
             $table->string('grade')->nullable()->after('role');
             $table->string('structure_recherche')->nullable()->after('grade');
             $table->foreignId('etablissement_id')->nullable()->after('structure_recherche')
-                ->constrained('etablissements')->nullOnDelete();
+                ->constrained('uma_etablissements')->nullOnDelete();
         });
 
-        Schema::table('dossiers', function (Blueprint $table) {
+        Schema::table('uma_dossiers', function (Blueprint $table) {
             $table->foreignId('directeur_id')->nullable()->after('doctorant_id')
                 ->constrained('users')->nullOnDelete();
         });
@@ -23,7 +23,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('dossiers', function (Blueprint $table) {
+        Schema::table('uma_dossiers', function (Blueprint $table) {
             $table->dropForeign(['directeur_id']);
             $table->dropColumn('directeur_id');
         });

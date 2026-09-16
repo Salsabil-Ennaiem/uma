@@ -41,7 +41,7 @@ class EnseignantImport extends BaseImport
             'role' => ['required', Rule::enum(UserRole::class)],
             'grade' => ['nullable', 'string'],
             'structure_recherche' => ['nullable', 'string'],
-            'etablissement' => ['nullable', Rule::exists('etablissements', 'nom')],
+            'etablissement' => ['nullable', Rule::exists('uma_etablissements', 'nom')],
         ];
     }
 
@@ -55,7 +55,7 @@ class EnseignantImport extends BaseImport
             'grade' => $data['grade'] ?? null,
             'structure_recherche' => $data['structure_recherche'] ?? null,
             'etablissement_id' => $data['etablissement'] !== null && $data['etablissement'] !== ''
-                ? static::lookupId('etablissements', 'nom', $data['etablissement'])
+                ? static::lookupId('uma_etablissements', 'nom', $data['etablissement'])
                 : null,
         ]);
     }

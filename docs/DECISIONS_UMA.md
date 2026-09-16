@@ -15,7 +15,8 @@
 
 ## ADR-0001 — Tables & préfixe base de données
 
-**Statut : ACCEPTÉ (défaut sûr, base dédiée) — en attente de confirmation CCK.**
+**Statut : ACCEPTÉ — puis AMENDÉ le 2026-09-16 par ADR-0003 (préfixe `uma_` appliqué dès
+maintenant aux tables métier ; Plan B-V2 réservé à un éventuel préfixage framework/vendor).**
 Décideur : éditeur · Date : 2026-09-16.
 
 ### Contexte
@@ -112,6 +113,51 @@ Besoins identifiés en P8.5a qui impliqueront des colonnes/objets (aucun est cr�
   index pré-rempli) — pas de nouveau staging pour ce fichier.
 - La décision de bascule **import natif Filament** (suppression des classes custom d'import) est
   **actée** et suivie en Phase 1b — voir `docs/transformation-modules-interopérables.md`.
+
+---
+
+## ADR-0003 — Préfixe `uma_` sur les tables métier (appliqué immédiatement)
+
+**Statut : ACCEPTÉ ET IMPLÉMENTÉ (décision utilisateur).**
+Décideur : utilisateur · Date : 2026-09-16.
+
+### Décision
+Le préfixe `uma_` est appliqué **dès maintenant** aux tables **métier** de l'application
+(argument utilisateur : *il est plus facile de retirer un préfixe que de l'ajouter*). Périmètre
+verrouillé via questionnaire :
+- **Préfixées `uma_`** : toutes les tables métier — `uma_universites, uma_ecole_doctorales,
+  uma_etablissements, uma_commissions, uma_decision_templates, uma_odj_templates,
+  uma_reunions, uma_invitations, uma_presences, uma_dossiers, uma_decisions, uma_audit_logs,
+  uma_documents, uma_document_versions, uma_rapport_etats, uma_workflow_definitions,
+  uma_workflow_transitions, uma_workflow_guards, uma_workflow_instances,
+  uma_workflow_audit_trails, uma_reclamations, uma_reclamation_discussions, uma_reservations`.
+- **Exclues** : tables framework/vendor (`users`, `sessions`, `cache`, `cache_locks`, `jobs`,
+  `job_batches`, `failed_jobs`, `notifications`, `exports`, `migrations`,
+  `password_reset_tokens`), pivots `commission_user` et `reunion_dossier`, **package**
+  `pv_module_*`.
+
+### Mécanisme
+Pas de préfixe de connexion global (il préfixerait aussi `pv_module_*` et les pivots) :
+- renommage **per-table** dans nos migrations (`Schema::create`/FK/down) ;
+- `protected $table = 'uma_x'` sur les **23 modèles métier** (`User` inchangé : table `users` ne
+  porte pas le préfixe) ; 
+- références brutes corrigées : `Rule::exists`/`lookupId` dans `TheseImport`
+  (`uma_commissions`) et `EnseignantImport` (`uma_etablissements`), FK `users.etablissement_id`
+  → `uma_etablissements`.
+
+### Vérification
+- `php artisan migrate:fresh --seed` ✅ (liste des tables conforme — cf. vérification shell).
+- Suite complète : **92 tests / 92 passed / 473 assertions** ✅.
+- Règle anti-SQL brut (`AGENTS.md`) de nouveau vérifiée : 0 nom de table en dur hors modèles.
+
+### Conséquences
+- **Plan B-V2 (ADR-0001)** : le préfixe global de connexion n'est **plus** le chemin pour les
+  tables métier ; Annexe A est révisée en conséquence et ne restera pertinente qu'en cas de
+  demande CCK de préfixage framework/vendor (sessions/cache/jobs…) — non appliqué aujourd'hui.
+- **Snapshots livrables** : `livrables_cdc5/01_sources_application` et `02_sources_package`
+  conservent l'ancien nommage (copies de livraison) — à **resynchroniser à la clôture**.
+- La fenêtre « base vide » a été utilisée : la bascule a eu lieu avant déploiement et avant
+  imports massifs, comme convenu.
 
 ---
 

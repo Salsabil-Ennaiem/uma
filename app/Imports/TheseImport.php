@@ -54,7 +54,7 @@ class TheseImport extends BaseImport
                 'email',
                 Rule::exists('users', 'email')->where(fn ($q) => $q->where('role', UserRole::DirecteurThese->value)),
             ],
-            'commission_nom' => ['required', Rule::exists('commissions', 'nom')],
+            'commission_nom' => ['required', Rule::exists('uma_commissions', 'nom')],
             'objet' => ['required', 'string', 'min:5', 'max:255'],
             'annee_inscription' => ['nullable', 'regex:/^\d{4}$/'],
             'statut' => ['nullable', Rule::in(collect(DossierStatut::cases())->map(fn ($s) => $s->value)->all())],
@@ -70,7 +70,7 @@ class TheseImport extends BaseImport
         Dossier::create([
             'doctorant_id' => static::lookupId('users', 'email', $data['doctorant_email']),
             'directeur_id' => $directeurId,
-            'commission_id' => static::lookupId('commissions', 'nom', $data['commission_nom']),
+            'commission_id' => static::lookupId('uma_commissions', 'nom', $data['commission_nom']),
             'objet' => $data['objet'],
             'statut' => $data['statut'] ?? DossierStatut::EnCours->value,
             'annee_inscription' => $data['annee_inscription'] ?? null,

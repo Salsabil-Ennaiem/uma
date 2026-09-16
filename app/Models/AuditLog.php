@@ -8,6 +8,8 @@ use LogicException;
 
 class AuditLog extends Model
 {
+    protected $table = 'uma_audit_logs';
+
     public const UPDATED_AT = null;
 
     protected $fillable = [

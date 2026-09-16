@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DecisionTemplate extends Model
 {
+    protected $table = 'uma_decision_templates';
+
     use HasFactory;
 
     protected $fillable = [

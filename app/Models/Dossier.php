@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Dossier extends Model
 {
+    protected $table = 'uma_dossiers';
+
     use HasFactory;
     use SoftDeletes;
 

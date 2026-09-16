@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Presence extends Model
 {
+    protected $table = 'uma_presences';
+
     protected $fillable = [
         'reunion_id',
         'participant_id',
