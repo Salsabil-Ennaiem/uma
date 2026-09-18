@@ -8,6 +8,7 @@ use App\Models\WorkflowDefinition;
 use App\Models\WorkflowGuard;
 use App\Models\WorkflowTransition;
 use Illuminate\Database\Seeder;
+use SalsabilEnnaiem\PvModule\Contracts\CanManagePv;
 
 /**
  * Déclarations en base des workflows métier du CDC (P8) :
@@ -89,7 +90,7 @@ class WorkflowSeeder extends Seeder
             ]],
             'guards' => [[
                 'rule' => 'contract',
-                'params' => ['contract' => \SalsabilEnnaiem\PvModule\Contracts\CanManagePv::class, 'method' => 'canCreate'],
+                'params' => ['contract' => CanManagePv::class, 'method' => 'canCreate'],
                 'error_message' => 'Le contrat du package refuse la génération.',
             ]],
             'sort' => 50,
