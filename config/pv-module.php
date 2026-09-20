@@ -1,10 +1,5 @@
 <?php
 
-use App\Models\User;
-use App\PvRules\ApprovalRules;
-use App\PvRules\ParticipantResolver;
-use App\PvRules\PvRules;
-
 return [
 
     /*
@@ -15,7 +10,7 @@ return [
     | via ce modèle. Ne jamais mettre un modèle du module ici.
     */
 
-    'user_model' => User::class,
+    'user_model' => \App\Models\User::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -26,9 +21,9 @@ return [
     */
 
     'routes' => [
-        'prefix' => 'admin/documents',
+        'prefix'      => 'admin/documents',
         'name_prefix' => 'pv-module.',
-        'middleware' => ['web', 'auth'],
+        'middleware'  => ['web', 'auth'],
     ],
 
     /*
@@ -50,9 +45,9 @@ return [
     | s'adapte à la RBAC, aux types de PV et au domaine de l'hôte.
     */
 
-    'can_manage_pv' => PvRules::class,
-    'approval_rules' => ApprovalRules::class,
-    'participant_resolver' => ParticipantResolver::class,
+    'can_manage_pv'        => \App\PvRules\PvRules::class,
+    'approval_rules'       => \App\PvRules\ApprovalRules::class,
+    'participant_resolver' => \App\PvRules\ParticipantResolver::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -73,7 +68,7 @@ return [
     | Architecture prête pour un mécanisme qualifié via SignatureStrategy (P8).
     */
 
-    'signature_mechanism' => config('uma.compliance.signature_driver', 'simple_image'),
+    'signature_mechanism' => 'simple_image',
 
     /*
     |--------------------------------------------------------------------------
@@ -87,6 +82,40 @@ return [
 
     'default_locale' => 'fr',
     'rtl_locales' => ['ar', 'he', 'fa', 'ur'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Impression en masse (batch)
+    |--------------------------------------------------------------------------
+    | format : 'pdf' => un seul fichier PDF concaténé paginé
+    |          'zip' => archive contenant un PDF par document
+    */
+
+    'batch' => [
+        'format' => 'pdf',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | En-têtes / logos paramétrables par structure
+    |--------------------------------------------------------------------------
+    | Chaque clé représente une structure (établissement, école, commission...).
+    | Le logo peut être :
+    |   - une URL absolue (http://...)
+    |   - une data-uri (data:image/png;base64,...)
+    |   - un chemin relatif sur le disque 'public' de l'app hôte (logos/uma.png)
+    | Si la clé est absente, le document garde sa mise en page actuelle
+    | (rétrocompatibilité v1.0.x).
+    */
+
+    'structures' => [
+        // 'default' => [
+        //     'intitule' => 'Université de la Manouba',
+        //     'regime'   => 'Régime public',
+        //     'ville'    => 'Manouba',
+        //     'logo'     => 'logos/uma.png',
+        // ],
+    ],
 
     /*
     |--------------------------------------------------------------------------

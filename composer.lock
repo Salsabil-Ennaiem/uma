@@ -5283,16 +5283,16 @@
         },
         {
             "name": "salsabil-ennaiem/pv-module",
-            "version": "v1.0.2",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Salsabil-Ennaiem/pv-module.git",
-                "reference": "dcd7af84c94c3002fc7a09aeaa478ce5d6604d12"
+                "reference": "c3f520945522b00218ac71d17e6d6c639393a8c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Salsabil-Ennaiem/pv-module/zipball/dcd7af84c94c3002fc7a09aeaa478ce5d6604d12",
-                "reference": "dcd7af84c94c3002fc7a09aeaa478ce5d6604d12",
+                "url": "https://api.github.com/repos/Salsabil-Ennaiem/pv-module/zipball/c3f520945522b00218ac71d17e6d6c639393a8c5",
+                "reference": "c3f520945522b00218ac71d17e6d6c639393a8c5",
                 "shasum": ""
             },
             "require": {
@@ -5350,9 +5350,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Salsabil-Ennaiem/pv-module/issues",
-                "source": "https://github.com/Salsabil-Ennaiem/pv-module/tree/v1.0.2"
+                "source": "https://github.com/Salsabil-Ennaiem/pv-module/tree/v1.1.0"
             },
-            "time": "2026-09-13T16:13:41+00:00"
+            "time": "2026-09-20T16:22:07+00:00"
         },
         {
             "name": "scrivo/highlight.php",
