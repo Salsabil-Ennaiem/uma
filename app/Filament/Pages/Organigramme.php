@@ -1,7 +1,5 @@
 <?php
-// PART 1 — voir ADR-0006 : sidebar Organigramme jsOrgChart local +
-// calendrier réunions (DateTimeSlotPicker wooserv). Policies : InstitutionPolicy
-// existante réutilisée (aucun doublon).
+
 namespace App\Filament\Pages;
 
 use App\Filament\Resources\Commissions\CommissionResource;
@@ -28,9 +26,11 @@ class Organigramme extends Page
     protected static ?int $navigationSort = 1;
     protected static ?string $title = 'Organigramme hierarchique';
     protected string $view = 'filament.pages.organigramme';
+    
     public ?string $selectedType = null;
     public ?int $selectedId = null;
     public ?array $editData = [];
+    public ?object $selectedModel = null;
 
     public static function canAccess(): bool
     {
@@ -39,6 +39,7 @@ class Organigramme extends Page
 
     public function mount(): void
     {
+        // Chargement initial si nécessaire
     }
 
     public function getTitle(): string|Htmlable
@@ -46,53 +47,124 @@ class Organigramme extends Page
         return 'Organigramme hierarchique';
     }
 
-
-
-    public function getHeadingX(): string
+    public function getSelectedModel(): ?object
     {
-        return 'Organigramme';
+        if (! $this->selectedModel && $this->selectedType && $this->selectedId) {
+            $this->selectedModel = $this->findNode($this->selectedType, $this->selectedId);
+        }
+        return $this->selectedModel;
     }
 
     public function detail(): array
     {
-        $m = $this->selected;
+        $m = $this->selectedModel;
         if (! $m) {
             return [];
         }
+        
         if ($m instanceof Universite) {
-            return ['Nom' => $m->nom, 'Code' => $m->code ?? '-', 'Ecoles' => $m->ecoleDoctorales()->count()];
+            return [
+                'Nom' => $m->nom, 
+                'Code' => $m->code ?? '-', 
+                'Ecoles doctorales' => $m->ecoleDoctorales()->count()
+            ];
         }
         if ($m instanceof EcoleDoctorale) {
-            return ['Nom' => $m->nom, 'Universite' => $m->universite?->nom ?? '-', 'Etablissements' => $m->etablissements()->count()];
+            return [
+                'Nom' => $m->nom, 
+                'Université' => $m->universite?->nom ?? '-', 
+                'Établissements' => $m->etablissements()->count()
+            ];
         }
         if ($m instanceof Etablissement) {
-            return ['Nom' => $m->nom, 'Ecole' => $m->ecoleDoctorale?->nom ?? '-', 'Directeur' => $m->directeur?->name ?? '-', 'Commissions' => $m->commissions()->count()];
+            return [
+                'Nom' => $m->nom, 
+                'École doctorale' => $m->ecoleDoctorale?->nom ?? '-', 
+                'Directeur' => $m->directeur?->name ?? '-', 
+                'Commissions' => $m->commissions()->count()
+            ];
         }
         if ($m instanceof Commission) {
-            return ['Nom' => $m->nom, 'Discipline' => $m->discipline ?? '-', 'Etablissement' => $m->etablissement?->nom ?? '-', 'President' => $m->president?->name ?? '-', 'Membres' => $m->membres()->count(), 'Active' => $m->is_active ? 'Oui' : 'Non'];
+            return [
+                'Nom' => $m->nom, 
+                'Discipline' => $m->discipline ?? '-', 
+                'Établissement' => $m->etablissement?->nom ?? '-', 
+                'Président' => $m->president?->name ?? '-', 
+                'Membres' => $m->membres()->count(), 
+                'Active' => $m->is_active ? 'Oui' : 'Non'
+            ];
         }
 
-        return ['Nom' => $m->name, 'Email' => $m->email, 'Role' => $m->role?->label() ?? '-', 'Etablissement' => $m->etablissement?->nom ?? '-', 'Commissions' => $m->commissions()->count()];
+        return [
+            'Nom' => $m->name, 
+            'Email' => $m->email, 
+            'Rôle' => $m->role?->label() ?? '-', 
+            'Établissement' => $m->etablissement?->nom ?? '-', 
+            'Commissions' => $m->commissions()->count()
+        ];
     }
 
     public function nodes(): array
     {
         $nodes = [];
-        $us = Universite::query()->with(['ecoleDoctorales.etablissements.commissions.membres'])->orderBy('nom')->get();
+        $us = Universite::query()
+            ->with(['ecoleDoctorales.etablissements.commissions.membres'])
+            ->orderBy('nom')
+            ->get();
+            
         foreach ($us as $u) {
             $uid = 'universite-'.$u->getKey();
-            $nodes[] = ['id' => $uid, 'parent' => null, 'type' => 'universite', 'modelId' => $u->getKey(), 'name' => $u->nom, 'title' => 'Universite'];
+            $nodes[] = [
+                'id' => $uid, 
+                'parent' => null, 
+                'type' => 'universite', 
+                'modelId' => $u->getKey(), 
+                'name' => $u->nom, 
+                'title' => 'Université'
+            ];
+            
             foreach ($u->ecoleDoctorales as $e) {
                 $eid = 'ecole-'.$e->getKey();
-                $nodes[] = ['id' => $eid, 'parent' => $uid, 'type' => 'ecole', 'modelId' => $e->getKey(), 'name' => $e->nom, 'title' => 'Ecole doctorale'];
+                $nodes[] = [
+                    'id' => $eid, 
+                    'parent' => $uid, 
+                    'type' => 'ecole', 
+                    'modelId' => $e->getKey(), 
+                    'name' => $e->nom, 
+                    'title' => 'École doctorale'
+                ];
+                
                 foreach ($e->etablissements as $t) {
                     $tid = 'etablissement-'.$t->getKey();
-                    $nodes[] = ['id' => $tid, 'parent' => $eid, 'type' => 'etablissement', 'modelId' => $t->getKey(), 'name' => $t->nom, 'title' => 'Etablissement'];
+                    $nodes[] = [
+                        'id' => $tid, 
+                        'parent' => $eid, 
+                        'type' => 'etablissement', 
+                        'modelId' => $t->getKey(), 
+                        'name' => $t->nom, 
+                        'title' => 'Établissement'
+                    ];
+                    
                     foreach ($t->commissions as $c) {
                         $cid = 'commission-'.$c->getKey();
-                        $nodes[] = ['id' => $cid, 'parent' => $tid, 'type' => 'commission', 'modelId' => $c->getKey(), 'name' => $c->nom, 'title' => 'Commission'];
+                        $nodes[] = [
+                            'id' => $cid, 
+                            'parent' => $tid, 
+                            'type' => 'commission', 
+                            'modelId' => $c->getKey(), 
+                            'name' => $c->nom, 
+                            'title' => 'Commission'
+                        ];
+                        
                         foreach ($c->membres as $m) {
-                            $nodes[] = ['id' => 'membre-'.$c->getKey().'-'.$m->getKey(), 'parent' => $cid, 'type' => 'membre', 'modelId' => $m->getKey(), 'name' => $m->name, 'title' => 'Membre'];
+                            $nodes[] = [
+                                'id' => 'membre-'.$c->getKey().'-'.$m->getKey(), 
+                                'parent' => $cid, 
+                                'type' => 'membre', 
+                                'modelId' => $m->getKey(), 
+                                'name' => $m->name, 
+                                'title' => 'Membre'
+                            ];
                         }
                     }
                 }
@@ -106,29 +178,21 @@ class Organigramme extends Page
     {
         $model = $this->findNode($type, $id);
         if (! $model) {
-            Notification::make()->danger('Element introuvable.')->send();
-
+            Notification::make()->danger('Élément introuvable.')->send();
             return;
         }
+        
         if (! auth()->user()?->can('view', $model)) {
-            Notification::make()->danger('Acces refuse.')->send();
-
+            Notification::make()->danger('Accès refusé.')->send();
             return;
         }
+
         $this->selectedType = $type;
         $this->selectedId = $id;
+        $this->selectedModel = $model;
         $this->editData = $model->only(array_keys($this->attrs($type)));
         $this->dispatch('org-chart-select', id: $type.'-'.$id);
     }
-
-    public function getSelectedProperty(): mixed
-{
-    if (! $this->selectedType || ! $this->selectedId) {
-        return null;
-    }
-
-    return $this->findNode($this->selectedType, $this->selectedId);
-}
 
     public function findNode(string $type, int $id): mixed
     {
@@ -168,7 +232,7 @@ class Organigramme extends Page
 
     public function canEdit(): bool
     {
-        $m = $this->selected;
+        $m = $this->selectedModel;
         if (! $m) {
             return false;
         }
@@ -178,7 +242,7 @@ class Organigramme extends Page
 
     public function selectedResourceUrl(): ?string
     {
-        $m = $this->selected;
+        $m = $this->selectedModel;
         if (! $m || ! $this->selectedType) {
             return null;
         }
@@ -209,14 +273,11 @@ class Organigramme extends Page
 
     public function selectedResourceEditUrl(): ?string
     {
-        $m = $this->selected;
+        $m = $this->selectedModel;
         if (! $m || ! $this->selectedType || ! $this->canEdit()) {
             return null;
         }
 
-        // Les resources Institution sont des ManageRecords (édition inline
-        // dans le tableau) : on renvoie vers l'index. Les réunions ont une
-        // vraie page edit dédiée gérée côté calendrier.
         $resource = match ($this->selectedType) {
             'universite' => UniversiteResource::class,
             'ecole' => EcoleDoctoraleResource::class,
@@ -239,18 +300,18 @@ class Organigramme extends Page
 
     public function saveSel(): void
     {
-        $m = $this->selected;
+        $m = $this->selectedModel;
         if (! $m) {
             return;
         }
+        
         if (! auth()->user()?->can('update', $m)) {
-            Notification::make()->danger('Pas autorise.')->send();
-
+            Notification::make()->danger('Pas autorisé.')->send();
             return;
         }
+
         $m->fill($this->editData ?? []);
         $m->save();
-        Notification::make()->success('Mis a jour.')->send();
+        Notification::make()->success('Mis à jour.')->send();
     }
 }
-

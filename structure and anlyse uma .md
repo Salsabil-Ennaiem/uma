@@ -7,12 +7,14 @@ Directory structure:
     ├── boost.json
     ├── CLAUDE.md
     ├── composer.json
+    ├── GitDiagramuma .md
     ├── NOUVELLE_APP_GUIDE_INTEGRATION.md
     ├── P9_recette_deploiement.md
     ├── package.json
     ├── phpunit.xml
     ├── PV_MODULE_CDC_COVERAGE.md
     ├── STRATEGIE_ROADMAP_PLATEFORME_UMA.md
+    ├── tmp_probe.txt
     ├── vite.config.js
     ├── WORKFLOW_ET_COMPTES.md
     ├── .editorconfig
@@ -39,6 +41,9 @@ Directory structure:
     │   │   ├── Exports/
     │   │   │   └── UserExporter.php
     │   │   ├── Pages/
+    │   │   │   ├── A1.txt
+    │   │   │   ├── CalendrierReunions.php
+    │   │   │   ├── Organigramme.php
     │   │   │   └── Imports/
     │   │   │       ├── ImportEnseignants.php
     │   │   │       └── ImportTheses.php
@@ -189,6 +194,8 @@ Directory structure:
     │   │   ├── DecisionTemplatePolicy.php
     │   │   ├── DocumentPolicy.php
     │   │   ├── DossierPolicy.php
+    │   │   ├── EcoleDoctoralePolicy.php
+    │   │   ├── EtablissementPolicy.php
     │   │   ├── InstitutionPolicy.php
     │   │   ├── InvitationPolicy.php
     │   │   ├── OdjTemplatePolicy.php
@@ -196,6 +203,7 @@ Directory structure:
     │   │   ├── PvPolicy.php
     │   │   ├── RapportEtatPolicy.php
     │   │   ├── ReunionPolicy.php
+    │   │   ├── UniversitePolicy.php
     │   │   └── UserPolicy.php
     │   ├── Providers/
     │   │   ├── AppServiceProvider.php
@@ -272,11 +280,18 @@ Directory structure:
     │   │   ├── 2026_09_21_000001_create_workflow_engine_tables.php
     │   │   └── 2026_09_22_000001_add_import_fields_to_users_and_dossiers.php
     │   └── seeders/
+    │       ├── CommissionsSeeder.php
     │       ├── DatabaseSeeder.php
+    │       ├── DossiersSeeder.php
+    │       ├── InstitutionSeeder.php
+    │       ├── ReclamationsSeeder.php
+    │       ├── ReunionsSeeder.php
     │       ├── UmaDocumentTemplatesSeeder.php
+    │       ├── UsersComplementSeeder.php
     │       ├── UsersSeeder.php
     │       └── WorkflowSeeder.php
     ├── docs/
+    │   ├── ADR-0006-organigramme-calendrier.md
     │   ├── bugs-and-solutions.md
     │   ├── commands-used.md
     │   ├── DECISIONS_UMA.md
@@ -829,39 +844,45 @@ Directory structure:
     │   │               ├── inter-greek-wght-normal-ZABHMKQG.woff2
     │   │               └── inter-vietnamese-wght-normal-VWEHJHBA.woff2
     │   └── js/
-    │       └── filament/
-    │           ├── actions/
-    │           │   └── actions.js
-    │           ├── filament/
-    │           │   └── app.js
-    │           ├── forms/
-    │           │   └── components/
-    │           │       ├── checkbox-list.js
-    │           │       ├── color-picker.js
-    │           │       ├── key-value.js
-    │           │       ├── slider.js
-    │           │       ├── tags-input.js
-    │           │       └── textarea.js
-    │           ├── notifications/
-    │           │   └── notifications.js
-    │           ├── schemas/
-    │           │   ├── schemas.js
-    │           │   └── components/
-    │           │       ├── actions.js
-    │           │       ├── tabs.js
-    │           │       └── wizard.js
-    │           └── tables/
-    │               ├── tables.js
-    │               └── components/
-    │                   └── columns/
-    │                       ├── checkbox.js
-    │                       ├── text-input.js
-    │                       └── toggle.js
+    │       ├── filament/
+    │       │   ├── actions/
+    │       │   │   └── actions.js
+    │       │   ├── filament/
+    │       │   │   └── app.js
+    │       │   ├── forms/
+    │       │   │   └── components/
+    │       │   │       ├── checkbox-list.js
+    │       │   │       ├── color-picker.js
+    │       │   │       ├── key-value.js
+    │       │   │       ├── slider.js
+    │       │   │       ├── tags-input.js
+    │       │   │       └── textarea.js
+    │       │   ├── notifications/
+    │       │   │   └── notifications.js
+    │       │   ├── schemas/
+    │       │   │   ├── schemas.js
+    │       │   │   └── components/
+    │       │   │       ├── actions.js
+    │       │   │       ├── tabs.js
+    │       │   │       └── wizard.js
+    │       │   └── tables/
+    │       │       ├── tables.js
+    │       │       └── components/
+    │       │           └── columns/
+    │       │               ├── checkbox.js
+    │       │               ├── text-input.js
+    │       │               └── toggle.js
+    │       └── org-chart/
+    │           └── probe.txt
     ├── resources/
     │   ├── css/
-    │   │   └── app.css
+    │   │   ├── app.css
+    │   │   └── org-chart.css
     │   ├── js/
-    │   │   └── app.js
+    │   │   ├── app.js
+    │   │   └── org-chart/
+    │   │       ├── js-orgchart.js
+    │   │       └── probe.txt
     │   └── views/
     │       ├── emails/
     │       │   ├── reunion/
@@ -870,6 +891,8 @@ Directory structure:
     │       │       └── state-changed.blade.php
     │       └── filament/
     │           ├── pages/
+    │           │   ├── calendrier-reunions.blade.php
+    │           │   ├── organigramme.blade.php
     │           │   └── imports/
     │           │       └── importer.blade.php
     │           └── resources/
@@ -1518,7 +1541,8 @@ FILE: composer.json
         "filament/filament": "^5.0",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-        "salsabil-ennaiem/pv-module": "^1.0"
+        "salsabil-ennaiem/pv-module": "^1.0",
+        "wooserv/filament-date-time-slots": "^1.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -1597,6 +1621,59 @@ FILE: composer.json
     "minimum-stability": "stable",
     "prefer-stable": true
 }
+
+
+
+================================================
+FILE: GitDiagramuma .md
+================================================
+GitDiagram
+
+GitHub repository
+https://github.com/salsabil-ennaiem/uma
+
+Step 2/3
+Explanation
+
+<explanation>
+## Purpose and entry points
+UMA is a Laravel 13 / Filament 5 back-office platform for doctoral-training administration: institutional hierarchy, dossiers, commission meetings, decisions, document/PV generation, workflow, reporting, and audit. HTTP enters through `public/index.php` and `bootstrap/app.php`; the single authenticated Filament panel is configured by `app/Providers/Filament/AdminPanelProvider.php` at `/admin`. Limited conventional routes are in `routes/web.php`; CLI entry is `artisan`.
+
+## Persistence and domain core
+Eloquent models define the durable domain, backed by Laravel database, cache, job, notification, institutional, meeting, archival, and workflow migrations.
+- Core academic/meeting records: `app/Models/Dossier.php`, `app/Models/Reunion.php`, `app/Models/Decision.php`.
+- Institutional scope: `app/Models/Universite.php`, `app/Models/EcoleDoctorale.php`, `app/Models/Commission.php`.
+- Document versioning and reporting: `app/Models/Document.php`, `app/Models/DocumentVersion.php`, `app/Models/RapportEtat.php`.
+- Workflow state is data-driven: `app/Models/WorkflowDefinition.php`, `app/Models/WorkflowInstance.php`, `database/migrations/2026_09_21_000001_create_workflow_engine_tables.php`.
+
+## Administrative interface and authorization boundary
+Filament resources are the primary user-facing control plane, rather than a separate public portal. They bind forms/tables to domain models and expose custom meeting operations.
+- Meetings: `app/Filament/Resources/Reunions/ReunionResource.php`, `app/Filament/Resources/Reunions/Pages/ManageReunionDecisions.php`.
+- Dossiers/documents/decisions: `app/Filament/Resources/Dossiers/DossierResource.php`, `app/Filament/Resources/Documents/DocumentResource.php`, `app/Filament/Resources/Decisions/DecisionResource.php`.
+- Authorization is native role enum plus policies, fail-closed outside explicit grants: `app/Enums/UserRole.php`, `app/Policies/ReunionPolicy.php`, `app/Policies/PvPolicy.php`.
+
+## Meeting-to-decision-to-PV flow
+`ReunionService` creates meetings transactionally, adds commission participants, governs status transitions, records audit data, and triggers notifications. Operators record presence and decisions in custom Filament pages; decisions snapshot templates and advance linked dossiers. A completed eligible meeting generates a PV sourced as `reunion/{id}` and sends it to present participants.
+- Orchestration: `app/Services/ReunionService.php`, `app/Services/DecisionService.php`.
+- Supporting records/audit: `app/Models/Invitation.php`, `app/Models/Presence.php`, `app/Models/AuditLog.php`.
+- State constraints: `app/Enums/ReunionStatut.php`, `app/Services/AuditLogger.php`.
+
+## Reusable PV/document package integration
+The application consumes the external Composer `pv-module` rather than duplicating it. Local adapters implement package contracts and isolate UMA-specific participant resolution, access control, approval thresholds, and signature policy. PV configuration also declares seven CDC document types and FR/AR template behavior.
+- App integration boundary: `config/pv-module.php`, `app/PvRules/PvRules.php`, `app/PvRules/ApprovalRules.php`.
+- Signature strategy boundary: `app/Contracts/SignatureStrategy.php`, `app/PvSignatures/SignatureResolver.php`, `app/PvSignatures/QualifiedSignatureStrategy.php`.
+- Package source/deliverable: `livrables_cdc5/02_sources_package/src/PvModuleServiceProvider.php`, `livrables_cdc5/02_sources_package/src/Services/PvService.php`, `livrables_cdc5/02_sources_package/src/Services/PdfService.php`.
+
+## Workflow, communications, and compliance
+Generic workflow services apply configured transitions and guards to instances, producing audit trails and notifications. Meeting and workflow events use database notifications and mail; configured mail/filesystem services are infrastructure boundaries. Archiving, CSV export, reports, imports, and immutable-style audit logs support administrative traceability.
+- Workflow engine: `app/Services/WorkflowEngine.php`, `app/Services/WorkflowActions.php`, `app/Services/WorkflowGuardResolver.php`.
+- Communications: `app/Services/NotificationService.php`, `app/Mail/ReunionConvocation.php`, `app/Notifications/WorkflowTransitioned.php`.
+- Operational services: `app/Services/ArchiveService.php`, `app/Services/RapportService.php`, `config/archive.php`.
+
+## Runtime and deployment shape
+The runtime is PHP/Laravel with Composer dependencies, Filament server-rendered admin assets, Vite-managed frontend assets, and a configurable relational database, cache, queue, filesystem, mail transport, and session layer. Runtime configuration centralizes UMA compliance flags, approval rules, workflow definitions, and signature driver selection in `config/uma.php` and `config/workflow.php`. `livrables_cdc5/` is a delivery archive containing a duplicated application source tree, standalone package source, conception documents, deployment material, and evidence; root application paths are the active architecture.
+</explanation>
+
 
 
 
@@ -2262,6 +2339,13 @@ P2 (package v1.0) ─┤
 - `prompts_uma/P*.md` — prompts d'exécution par étape
 
 > **Synchronisation** : ce MD et les prompts sont un seul document en deux fichiers. Toute modification de l'un doit être répercutée dans l'autre — consigner le duo « MD + prompt » comme atomicité de modification.
+
+
+================================================
+FILE: tmp_probe.txt
+================================================
+ok
+
 
 
 ================================================
@@ -3013,6 +3097,429 @@ class UserExporter extends Exporter
         return $query->withCount('commissions');
     }
 }
+
+
+================================================
+FILE: app/Filament/Pages/A1.txt
+================================================
+A
+
+
+
+================================================
+FILE: app/Filament/Pages/CalendrierReunions.php
+================================================
+<?php
+
+namespace App\Filament\Pages;
+
+use App\Filament\Resources\Reunions\ReunionResource;
+use App\Models\Reunion;
+use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
+
+class CalendrierReunions extends Page
+{
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Reunions';
+
+    protected static ?string $navigationLabel = 'Calendrier';
+
+    protected static ?int $navigationSort = 2;
+
+    protected static ?string $title = 'Calendrier des reunions';
+
+    protected static ?string $slug = 'calendrier-reunions';
+
+    protected string $view = 'filament.pages.calendrier-reunions';
+
+    public ?int $year = null;
+
+    public ?int $month = null;
+
+    public ?int $selectedId = null;
+
+    public ?string $selectedDay = null;
+
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) ($user && $user->can('viewAny', \App\Models\Reunion::class));
+    }
+
+    public function mount(): void
+    {
+        $this->year = (int) now()->format('Y');
+        $this->month = (int) now()->format('n');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Calendrier des reunions';
+    }
+
+    public function prevMonth(): void
+    {
+        $d = \Carbon\Carbon::create($this->year, $this->month, 1)->subMonth();
+        $this->year = (int) $d->format('Y');
+        $this->month = (int) $d->format('n');
+    }
+
+    public function nextMonth(): void
+    {
+        $d = \Carbon\Carbon::create($this->year, $this->month, 1)->addMonth();
+        $this->year = (int) $d->format('Y');
+        $this->month = (int) $d->format('n');
+    }
+
+    public function rows(): array
+    {
+        $start = \Carbon\Carbon::create($this->year, $this->month, 1)->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+        $items = Reunion::query()->with(['commission'])
+            ->whereBetween('date_debut', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
+            ->orderBy('date_debut')->limit(300)->get();
+        $byDay = [];
+        foreach ($items as $r) {
+            if (! auth()->user()?->can('view', $r)) {
+                continue;
+            }
+            $k = $r->date_debut ? $r->date_debut->format('Y-m-d') : $start->format('Y-m-d');
+            $byDay[$k][] = $r;
+        }
+
+        return $byDay;
+    }
+
+    public function weeks(): array
+    {
+        $first = \Carbon\Carbon::create($this->year, $this->month, 1);
+        $start = $first->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $end = $first->copy()->endOfMonth()->endOfWeek(\Carbon\Carbon::SUNDAY);
+        $weeks = [];
+        $cur = $start->copy();
+        while ($cur->lte($end)) {
+            $w = [];
+            for ($i = 0; $i < 7; $i++) {
+                $w[] = $cur->copy();
+                $cur->addDay();
+            }
+            $weeks[] = $w;
+        }
+
+        return $weeks;
+    }
+
+    public function selDay(string $day): void
+    {
+        $this->selectedId = null;
+        $this->selectedDay = $day;
+    }
+
+    public function selReunion(int $id): void
+    {
+        $r = Reunion::query()->find($id);
+        if (! $r || ! auth()->user()?->can('view', $r)) {
+            Notification::make()->danger('Acces refuse.')->send();
+
+            return;
+        }
+        $this->selectedId = $id;
+    }
+
+    public function delReunion(int $id): void
+    {
+        $r = Reunion::query()->find($id);
+        if (! $r || ! auth()->user()?->can('delete', $r)) {
+            Notification::make()->danger('Suppression non autorisee.')->send();
+
+            return;
+        }
+        $r->delete();
+        $this->selectedId = null;
+        Notification::make()->success('Reunion supprimee.')->send();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('create')
+                ->label('Creer une reunion')
+                ->icon('heroicon-o-plus')
+                ->url(fn () => ReunionResource::getUrl('create', ['jour' => $this->selectedDay]))
+                ->visible(fn () => auth()->user()?->can('create', Reunion::class) ?? false),
+        ];
+    }
+}
+
+
+
+================================================
+FILE: app/Filament/Pages/Organigramme.php
+================================================
+<?php
+// PART 1 — voir ADR-0006 : sidebar Organigramme jsOrgChart local +
+// calendrier réunions (DateTimeSlotPicker wooserv). Policies : InstitutionPolicy
+// existante réutilisée (aucun doublon).
+namespace App\Filament\Pages;
+
+use App\Filament\Resources\Commissions\CommissionResource;
+use App\Filament\Resources\EcoleDoctorales\EcoleDoctoraleResource;
+use App\Filament\Resources\Etablissements\EtablissementResource;
+use App\Filament\Resources\Universites\UniversiteResource;
+use App\Filament\Resources\Users\UserResource;
+use App\Models\Commission;
+use App\Models\EcoleDoctorale;
+use App\Models\Etablissement;
+use App\Models\Universite;
+use App\Models\User;
+use BackedEnum;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
+
+class Organigramme extends Page
+{
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShare;
+    protected static string|\UnitEnum|null $navigationGroup = 'Institution';
+    protected static ?string $navigationLabel = 'Organigramme';
+    protected static ?int $navigationSort = 1;
+    protected static ?string $title = 'Organigramme hierarchique';
+    protected string $view = 'filament.pages.organigramme';
+    public ?string $selectedType = null;
+    public ?int $selectedId = null;
+    public ?array $editData = [];
+
+    public static function canAccess(): bool
+    {
+        return (bool) auth()->user();
+    }
+
+    public function mount(): void
+    {
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Organigramme hierarchique';
+    }
+
+
+
+    public function getHeadingX(): string
+    {
+        return 'Organigramme';
+    }
+
+    public function detail(): array
+    {
+        $m = $this->selected;
+        if (! $m) {
+            return [];
+        }
+        if ($m instanceof Universite) {
+            return ['Nom' => $m->nom, 'Code' => $m->code ?? '-', 'Ecoles' => $m->ecoleDoctorales()->count()];
+        }
+        if ($m instanceof EcoleDoctorale) {
+            return ['Nom' => $m->nom, 'Universite' => $m->universite?->nom ?? '-', 'Etablissements' => $m->etablissements()->count()];
+        }
+        if ($m instanceof Etablissement) {
+            return ['Nom' => $m->nom, 'Ecole' => $m->ecoleDoctorale?->nom ?? '-', 'Directeur' => $m->directeur?->name ?? '-', 'Commissions' => $m->commissions()->count()];
+        }
+        if ($m instanceof Commission) {
+            return ['Nom' => $m->nom, 'Discipline' => $m->discipline ?? '-', 'Etablissement' => $m->etablissement?->nom ?? '-', 'President' => $m->president?->name ?? '-', 'Membres' => $m->membres()->count(), 'Active' => $m->is_active ? 'Oui' : 'Non'];
+        }
+
+        return ['Nom' => $m->name, 'Email' => $m->email, 'Role' => $m->role?->label() ?? '-', 'Etablissement' => $m->etablissement?->nom ?? '-', 'Commissions' => $m->commissions()->count()];
+    }
+
+    public function nodes(): array
+    {
+        $nodes = [];
+        $us = Universite::query()->with(['ecoleDoctorales.etablissements.commissions.membres'])->orderBy('nom')->get();
+        foreach ($us as $u) {
+            $uid = 'universite-'.$u->getKey();
+            $nodes[] = ['id' => $uid, 'parent' => null, 'type' => 'universite', 'modelId' => $u->getKey(), 'name' => $u->nom, 'title' => 'Universite'];
+            foreach ($u->ecoleDoctorales as $e) {
+                $eid = 'ecole-'.$e->getKey();
+                $nodes[] = ['id' => $eid, 'parent' => $uid, 'type' => 'ecole', 'modelId' => $e->getKey(), 'name' => $e->nom, 'title' => 'Ecole doctorale'];
+                foreach ($e->etablissements as $t) {
+                    $tid = 'etablissement-'.$t->getKey();
+                    $nodes[] = ['id' => $tid, 'parent' => $eid, 'type' => 'etablissement', 'modelId' => $t->getKey(), 'name' => $t->nom, 'title' => 'Etablissement'];
+                    foreach ($t->commissions as $c) {
+                        $cid = 'commission-'.$c->getKey();
+                        $nodes[] = ['id' => $cid, 'parent' => $tid, 'type' => 'commission', 'modelId' => $c->getKey(), 'name' => $c->nom, 'title' => 'Commission'];
+                        foreach ($c->membres as $m) {
+                            $nodes[] = ['id' => 'membre-'.$c->getKey().'-'.$m->getKey(), 'parent' => $cid, 'type' => 'membre', 'modelId' => $m->getKey(), 'name' => $m->name, 'title' => 'Membre'];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $nodes;
+    }
+
+    public function sel(string $type, int $id): void
+    {
+        $model = $this->findNode($type, $id);
+        if (! $model) {
+            Notification::make()->danger('Element introuvable.')->send();
+
+            return;
+        }
+        if (! auth()->user()?->can('view', $model)) {
+            Notification::make()->danger('Acces refuse.')->send();
+
+            return;
+        }
+        $this->selectedType = $type;
+        $this->selectedId = $id;
+        $this->editData = $model->only(array_keys($this->attrs($type)));
+        $this->dispatch('org-chart-select', id: $type.'-'.$id);
+    }
+
+    public function getSelectedProperty(): mixed
+{
+    if (! $this->selectedType || ! $this->selectedId) {
+        return null;
+    }
+
+    return $this->findNode($this->selectedType, $this->selectedId);
+}
+
+    public function findNode(string $type, int $id): mixed
+    {
+        if ($type === 'universite') {
+            return Universite::query()->find($id);
+        }
+        if ($type === 'ecole') {
+            return EcoleDoctorale::query()->find($id);
+        }
+        if ($type === 'etablissement') {
+            return Etablissement::query()->find($id);
+        }
+        if ($type === 'commission') {
+            return Commission::query()->find($id);
+        }
+
+        return User::query()->find($id);
+    }
+
+    public function attrs(string $type): array
+    {
+        if ($type === 'universite') {
+            return ['nom' => 1, 'code' => 1];
+        }
+        if ($type === 'ecole') {
+            return ['nom' => 1, 'universite_id' => 1];
+        }
+        if ($type === 'etablissement') {
+            return ['nom' => 1];
+        }
+        if ($type === 'commission') {
+            return ['nom' => 1, 'discipline' => 1];
+        }
+
+        return ['name' => 1, 'email' => 1];
+    }
+
+    public function canEdit(): bool
+    {
+        $m = $this->selected;
+        if (! $m) {
+            return false;
+        }
+
+        return (bool) auth()->user()?->can('update', $m);
+    }
+
+    public function selectedResourceUrl(): ?string
+    {
+        $m = $this->selected;
+        if (! $m || ! $this->selectedType) {
+            return null;
+        }
+
+        if (! auth()->user()?->can('view', $m)) {
+            return null;
+        }
+
+        $resource = match ($this->selectedType) {
+            'universite' => UniversiteResource::class,
+            'ecole' => EcoleDoctoraleResource::class,
+            'etablissement' => EtablissementResource::class,
+            'commission' => CommissionResource::class,
+            'membre' => UserResource::class,
+            default => null,
+        };
+
+        if (! $resource) {
+            return null;
+        }
+
+        try {
+            return $resource::getUrl('index');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    public function selectedResourceEditUrl(): ?string
+    {
+        $m = $this->selected;
+        if (! $m || ! $this->selectedType || ! $this->canEdit()) {
+            return null;
+        }
+
+        // Les resources Institution sont des ManageRecords (édition inline
+        // dans le tableau) : on renvoie vers l'index. Les réunions ont une
+        // vraie page edit dédiée gérée côté calendrier.
+        $resource = match ($this->selectedType) {
+            'universite' => UniversiteResource::class,
+            'ecole' => EcoleDoctoraleResource::class,
+            'etablissement' => EtablissementResource::class,
+            'commission' => CommissionResource::class,
+            'membre' => UserResource::class,
+            default => null,
+        };
+
+        if (! $resource) {
+            return null;
+        }
+
+        try {
+            return $resource::getUrl('index');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    public function saveSel(): void
+    {
+        $m = $this->selected;
+        if (! $m) {
+            return;
+        }
+        if (! auth()->user()?->can('update', $m)) {
+            Notification::make()->danger('Pas autorise.')->send();
+
+            return;
+        }
+        $m->fill($this->editData ?? []);
+        $m->save();
+        Notification::make()->success('Mis a jour.')->send();
+    }
+}
+
+
 
 
 ================================================
@@ -5712,6 +6219,17 @@ class CreateReunion extends CreateRecord
 {
     protected static string $resource = ReunionResource::class;
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        // Pré-remplit le créneau depuis le calendrier (?jour=YYYY-MM-DD).
+        $jour = request()->query('jour');
+        if (is_string($jour) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $jour)) {
+            $this->form->fill(['date_debut' => $jour.' 09:00']);
+        }
+    }
+
     protected function handleRecordCreation(array $data): Model
     {
         $reunion = app(ReunionService::class)->create($data, auth()->user());
@@ -6250,6 +6768,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use WooServ\FilamentDateTimeSlots\Forms\Components\DateTimeSlotPicker;
 
 class ReunionForm
 {
@@ -6300,9 +6819,32 @@ class ReunionForm
                     ->label('Ordre du jour')
                     ->columnSpanFull()
                     ->rows(8),
-                DateTimePicker::make('date_debut')
-                    ->label('Date et heure de début')
-                    ->required(),
+                DateTimeSlotPicker::make('date_debut')
+                    ->label('Date puis creneau (heures ouvrees)')
+                    ->format('Y-m-d H:i')
+                    ->minDate(now())
+                    ->minimumLeadTime(30)
+                    ->slotInterval(30)
+                    ->workingHours([
+                        'monday' => ['08:00', '18:00'],
+                        'tuesday' => ['08:00', '18:00'],
+                        'wednesday' => ['08:00', '18:00'],
+                        'thursday' => ['08:00', '18:00'],
+                        'friday' => ['08:00', '18:00'],
+                        'saturday' => ['09:00', '12:00'],
+                    ])
+                    ->blockedSlots(fn () => self::blockedByCommission())
+                    ->showBlockedSlots()
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function ($state, $set) {
+                        if ($state) {
+                            try {
+                                $set('date_fin', \Carbon\Carbon::parse($state)->addHours(2)->format('Y-m-d H:i:s'));
+                            } catch (\Throwable) {
+                            }
+                        }
+                    }),
                 DateTimePicker::make('date_fin')
                     ->label('Date et heure de fin')
                     ->after('date_debut'),
@@ -6325,6 +6867,25 @@ class ReunionForm
                     ->required()
                     ->disabled(fn ($livewire) => $livewire instanceof CreateReunion),
             ]);
+    }
+
+    /** Creneaux deja pris par commission : ['Y-m-d' => ['H:i', ...]]. */
+    protected static function blockedByCommission(): array
+    {
+        $out = [];
+        $rows = \App\Models\Reunion::query()
+            ->select(['commission_id', 'date_debut'])
+            ->whereNotNull('date_debut')
+            ->where('date_debut', '>=', now()->startOfDay())
+            ->limit(500)
+            ->get();
+        foreach ($rows as $r) {
+            $d = $r->date_debut instanceof \DateTimeInterface ? $r->date_debut->format('Y-m-d') : substr((string) $r->date_debut, 0, 10);
+            $h = $r->date_debut instanceof \DateTimeInterface ? $r->date_debut->format('H:i') : substr((string) $r->date_debut, 11, 5);
+            $out[$d][] = $h;
+        }
+
+        return $out;
     }
 }
 
@@ -8423,860 +8984,4 @@ class ReclamationDiscussion extends Model
 {
     protected $table = 'uma_reclamation_discussions';
 
-    public const UPDATED_AT = null;
-
-    protected $fillable = [
-        'reclamation_id',
-        'user_id',
-        'message',
-        'created_at',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'created_at' => 'datetime',
-        ];
-    }
-
-    public function reclamation(): BelongsTo
-    {
-        return $this->belongsTo(Reclamation::class);
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-}
-
-
-
-================================================
-FILE: app/Models/Reservation.php
-================================================
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-/**
- * Réservation d'une salle ou d'un membre de jury pour une soutenance.
- * Sert au contrôle de chevauchement jury/salles (Workflow B, exigence CDC §10).
- */
-class Reservation extends Model
-{
-    protected $table = 'uma_reservations';
-
-    use HasFactory;
-
-    public const TYPE_SALLE = 'salle';
-
-    public const TYPE_JURY = 'jury';
-
-    protected $fillable = [
-        'type',
-        'salle',
-        'membre_id',
-        'date_debut',
-        'date_fin',
-        'objet',
-        'created_by',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'date_debut' => 'datetime',
-            'date_fin' => 'datetime',
-        ];
-    }
-
-    public function membre(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'membre_id');
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * Chevauche les réservations de même type/cible sur la plage donnée.
-     */
-    public function scopeChevauche(Builder $query, string $type, ?string $salle = null, ?int $membreId = null, $debut = null, $fin = null): Builder
-    {
-        return $query
-            ->where('type', $type)
-            ->when($salle !== null && $type === self::TYPE_SALLE, fn (Builder $q) => $q->where('salle', $salle))
-            ->when($membreId !== null && $type === self::TYPE_JURY, fn (Builder $q) => $q->where('membre_id', $membreId))
-            ->when($debut !== null || $fin !== null, function (Builder $q) use ($debut, $fin) {
-                $q->where(function (Builder $inner) use ($debut, $fin) {
-                    if ($debut !== null) {
-                        $inner->where('date_fin', '>', $debut);
-                    }
-                    if ($fin !== null) {
-                        $inner->where('date_debut', '<', $fin);
-                    }
-                });
-            });
-    }
-}
-
-
-
-================================================
-FILE: app/Models/Reunion.php
-================================================
-<?php
-
-namespace App\Models;
-
-use App\Enums\ReunionStatut;
-use App\Enums\ReunionType;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use SalsabilEnnaiem\PvModule\Models\Pv;
-
-class Reunion extends Model
-{
-    protected $table = 'uma_reunions';
-
-    use HasFactory;
-    use SoftDeletes;
-
-    protected $fillable = [
-        'commission_id',
-        'objet',
-        'description',
-        'odj_template_id',
-        'ordre_du_jour',
-        'date_debut',
-        'date_fin',
-        'lieu',
-        'lien',
-        'type',
-        'statut',
-        'created_by',
-        'updated_by',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'date_debut' => 'datetime',
-            'date_fin' => 'datetime',
-            'type' => ReunionType::class,
-            'statut' => ReunionStatut::class,
-        ];
-    }
-
-    public function commission(): BelongsTo
-    {
-        return $this->belongsTo(Commission::class);
-    }
-
-    public function odjTemplate(): BelongsTo
-    {
-        return $this->belongsTo(OdjTemplate::class);
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function inviter(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function invitations(): HasMany
-    {
-        return $this->hasMany(Invitation::class);
-    }
-
-    public function presences(): HasMany
-    {
-        return $this->hasMany(Presence::class);
-    }
-
-    public function dossiers(): BelongsToMany
-    {
-        return $this->belongsToMany(Dossier::class, 'reunion_dossier')
-            ->withPivot('position')
-            ->withTimestamps()
-            ->orderByPivot('position');
-    }
-
-    public function decisions(): HasMany
-    {
-        return $this->hasMany(Decision::class);
-    }
-
-    public function pvs()
-    {
-        return (new Pv)->newQuery()
-            ->where('source_type', 'reunion')
-            ->where('source_id', $this->getKey());
-    }
-
-    public function participantsEnsemble(): array
-    {
-        return [
-            'commission_id' => $this->commission_id,
-        ];
-    }
-
-    public function estPassee(): bool
-    {
-        return $this->date_fin !== null && $this->date_fin->lt(now());
-    }
-}
-
-
-
-================================================
-FILE: app/Models/Universite.php
-================================================
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-#[Fillable(['nom', 'code'])]
-class Universite extends Model
-{
-    protected $table = 'uma_universites';
-
-    use HasFactory;
-
-    public function ecoleDoctorales(): HasMany
-    {
-        return $this->hasMany(EcoleDoctorale::class);
-    }
-}
-
-
-
-================================================
-FILE: app/Models/User.php
-================================================
-<?php
-
-namespace App\Models;
-
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Enums\UserRole;
-use Database\Factories\UserFactory;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-
-#[Fillable(['name', 'email', 'password', 'role', 'grade', 'structure_recherche', 'etablissement_id'])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser
-{
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
-
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return $panel->getId() === 'admin' && $this->role !== null;
-    }
-
-    public function etablissement(): BelongsTo
-    {
-        return $this->belongsTo(Etablissement::class);
-    }
-
-    public function commissions(): BelongsToMany
-    {
-        return $this->belongsToMany(Commission::class)->withPivot('role')->withTimestamps();
-    }
-
-    public function commissionsPresidees(): HasMany
-    {
-        return $this->hasMany(Commission::class, 'president_id');
-    }
-
-    public function etablissementDirecteur(): HasMany
-    {
-        return $this->hasMany(Etablissement::class, 'directeur_id');
-    }
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'role' => UserRole::class,
-        ];
-    }
-}
-
-
-
-================================================
-FILE: app/Models/WorkflowAuditTrail.php
-================================================
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use LogicException;
-
-/**
- * Trace d'exécution d'une transition de workflow.
- * Append-only : toute écriture sur une ligne existante est refusée
- * (traçabilité des parcours, exigence P7 transposée au moteur).
- */
-class WorkflowAuditTrail extends Model
-{
-    protected $table = 'uma_workflow_audit_trails';
-
-    public const UPDATED_AT = null;
-
-    protected $fillable = [
-        'workflow_instance_id',
-        'from_state',
-        'to_state',
-        'transition_code',
-        'actor_id',
-        'payload',
-        'created_at',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'payload' => 'array',
-            'created_at' => 'datetime',
-        ];
-    }
-
-    public function instance(): BelongsTo
-    {
-        return $this->belongsTo(WorkflowInstance::class, 'workflow_instance_id');
-    }
-
-    public function actor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'actor_id');
-    }
-
-    public function save(array $options = []): bool
-    {
-        if ($this->exists) {
-            throw new LogicException('Une trace de workflow est immuable.');
-        }
-
-        return parent::save($options);
-    }
-
-    public function update(array $attributes = [], array $options = []): bool
-    {
-        throw new LogicException('Une trace de workflow est immuable.');
-    }
-
-    public function delete(): ?bool
-    {
-        throw new LogicException('Une trace de workflow est immuable.');
-    }
-}
-
-
-
-================================================
-FILE: app/Models/WorkflowDefinition.php
-================================================
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-/**
- * Définition paramétrable d'un workflow métier (CDC §1.12).
- * Les états sont stockés dans la colonne `states` (json) : toute transition
- * déclarable en base n'exige aucune modification de code.
- */
-class WorkflowDefinition extends Model
-{
-    protected $table = 'uma_workflow_definitions';
-
-    use HasFactory;
-
-    protected $fillable = [
-        'code',
-        'name',
-        'description',
-        'subject_type',
-        'states',
-        'initial_state',
-        'is_active',
-        'created_by',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'states' => 'array',
-            'is_active' => 'boolean',
-        ];
-    }
-
-    public function transitions(): HasMany
-    {
-        return $this->hasMany(WorkflowTransition::class, 'workflow_definition_id');
-    }
-
-    public function instances(): HasMany
-    {
-        return $this->hasMany(WorkflowInstance::class, 'workflow_definition_id');
-    }
-
-    public function statesList(): array
-    {
-        return (array) $this->states;
-    }
-
-    public function isTerminalState(string $state): bool
-    {
-        return $state === collect($this->statesList())->last();
-    }
-}
-
-
-
-================================================
-FILE: app/Models/WorkflowGuard.php
-================================================
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-/**
- * Garde paramétrable d'une transition de workflow.
- * La règle (`rule`) est un code interprété par le garde-règles du moteur
- * (ex. `role`, `subject.data`, `subject.document`, `contract`, `no_overlap`).
- */
-class WorkflowGuard extends Model
-{
-    protected $table = 'uma_workflow_guards';
-
-    use HasFactory;
-
-    protected $fillable = [
-        'workflow_transition_id',
-        'rule',
-        'params',
-        'error_message',
-        'is_active',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'params' => 'array',
-            'is_active' => 'boolean',
-        ];
-    }
-
-    public function transition(): BelongsTo
-    {
-        return $this->belongsTo(WorkflowTransition::class, 'workflow_transition_id');
-    }
-}
-
-
-
-================================================
-FILE: app/Models/WorkflowInstance.php
-================================================
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
-
-/**
- * Instance d'un workflow paramétrable : applique une définition à un sujet
- * métier (ex. un dossier ou une réclamation) et suit l'état courant.
- */
-class WorkflowInstance extends Model
-{
-    protected $table = 'uma_workflow_instances';
-
-    use HasFactory;
-
-    protected $fillable = [
-        'workflow_definition_id',
-        'subject_type',
-        'subject_id',
-        'current_state',
-        'data',
-        'status',
-        'started_at',
-        'completed_at',
-        'created_by',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'data' => 'array',
-            'started_at' => 'datetime',
-            'completed_at' => 'datetime',
-        ];
-    }
-
-    public function definition(): BelongsTo
-    {
-        return $this->belongsTo(WorkflowDefinition::class, 'workflow_definition_id');
-    }
-
-    public function subject(): MorphTo
-    {
-        return $this->morphTo();
-    }
-
-    public function auditTrails(): HasMany
-    {
-        return $this->hasMany(WorkflowAuditTrail::class, 'workflow_instance_id');
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function isActive(): bool
-    {
-        return $this->status === 'active';
-    }
-
-    public function isCompleted(): bool
-    {
-        return $this->status === 'completed';
-    }
-
-    public function dataGet(string $key, mixed $default = null): mixed
-    {
-        return data_get($this->data, $key, $default);
-    }
-}
-
-
-
-================================================
-FILE: app/Models/WorkflowTransition.php
-================================================
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-/**
- * Transition déclarée en base entre deux états d'un workflow.
- * Les gardes (WorkflowGuard) et les rôles autorisés (json `roles`) pilotent
- * l'exécution ; aucune logique de transition n'est codée en dur dans Filament.
- */
-class WorkflowTransition extends Model
-{
-    protected $table = 'uma_workflow_transitions';
-
-    use HasFactory;
-
-    protected $fillable = [
-        'workflow_definition_id',
-        'code',
-        'label',
-        'from_state',
-        'to_state',
-        'roles',
-        'actions',
-        'notifications',
-        'sort',
-        'is_active',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'roles' => 'array',
-            'actions' => 'array',
-            'notifications' => 'array',
-            'is_active' => 'boolean',
-        ];
-    }
-
-    public function definition(): BelongsTo
-    {
-        return $this->belongsTo(WorkflowDefinition::class, 'workflow_definition_id');
-    }
-
-    public function guards(): HasMany
-    {
-        return $this->hasMany(WorkflowGuard::class, 'workflow_transition_id');
-    }
-
-    public function rolesAutorises(): array
-    {
-        return array_values(array_filter((array) $this->roles));
-    }
-}
-
-
-
-================================================
-FILE: app/Notifications/ReunionPlanifiee.php
-================================================
-<?php
-
-namespace App\Notifications;
-
-use App\Models\Reunion;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
-
-class ReunionPlanifiee extends Notification implements ShouldQueue
-{
-    use Queueable;
-
-    public function __construct(public Reunion $reunion) {}
-
-    public function via(object $notifiable): array
-    {
-        return ['database'];
-    }
-
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'reunion_id' => $this->reunion->getKey(),
-            'objet' => $this->reunion->objet,
-            'date_debut' => $this->reunion->date_debut?->toIso8601String(),
-            'lieu' => $this->reunion->lieu,
-            'message' => 'Vous êtes convoqué(e) à une réunion : '.$this->reunion->objet,
-        ];
-    }
-}
-
-
-
-================================================
-FILE: app/Notifications/ReunionTerminee.php
-================================================
-<?php
-
-namespace App\Notifications;
-
-use App\Models\Reunion;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
-
-class ReunionTerminee extends Notification implements ShouldQueue
-{
-    use Queueable;
-
-    public function __construct(public Reunion $reunion) {}
-
-    public function via(object $notifiable): array
-    {
-        return ['mail', 'database'];
-    }
-
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->subject('Réunion terminée — '.$this->reunion->objet)
-            ->line('La réunion « '.$this->reunion->objet.' » est terminée.')
-            ->line('Les décisions et le procès-verbal sont en cours de traitement.');
-    }
-
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'reunion_id' => $this->reunion->getKey(),
-            'objet' => $this->reunion->objet,
-            'message' => 'La réunion « '.$this->reunion->objet.' » est terminée.',
-        ];
-    }
-}
-
-
-
-================================================
-FILE: app/Notifications/WorkflowTransitioned.php
-================================================
-<?php
-
-namespace App\Notifications;
-
-use App\Models\WorkflowInstance;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
-
-class WorkflowTransitioned extends Notification implements ShouldQueue
-{
-    use Queueable;
-
-    public function __construct(
-        public WorkflowInstance $instance,
-        public string $message,
-    ) {}
-
-    public function via(object $notifiable): array
-    {
-        return ['database'];
-    }
-
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'workflow_instance_id' => $this->instance->getKey(),
-            'definition' => $this->instance->definition?->code,
-            'state' => $this->instance->current_state,
-            'message' => $this->message,
-        ];
-    }
-}
-
-
-================================================
-FILE: app/Policies/AuditLogPolicy.php
-================================================
-<?php
-
-namespace App\Policies;
-
-use App\Enums\UserRole;
-use App\Models\AuditLog;
-use App\Models\User;
-
-/**
- * Journal d'audit : en lecture seule pour l'administrateur.
- * Toute mutation est refusée (append-only) — le champs d'application est aussi
- * garanti au niveau du modèle (AuditLog::save/update/delete lèvent une exception).
- */
-class AuditLogPolicy
-{
-    public function viewAny(User $actor): bool
-    {
-        return $actor->role === UserRole::Admin;
-    }
-
-    public function view(User $actor, AuditLog $log): bool
-    {
-        return $actor->role === UserRole::Admin;
-    }
-
-    public function create(User $actor): bool
-    {
-        return false;
-    }
-
-    public function update(User $actor, AuditLog $log): bool
-    {
-        return false;
-    }
-
-    public function delete(User $actor, AuditLog $log): bool
-    {
-        return false;
-    }
-
-    public function restore(User $actor, AuditLog $log): bool
-    {
-        return false;
-    }
-
-    public function forceDelete(User $actor, AuditLog $log): bool
-    {
-        return false;
-    }
-}
-
-
-
-================================================
-FILE: app/Policies/CommissionPolicy.php
-================================================
-<?php
-
-namespace App\Policies;
-
-use App\Enums\UserRole;
-use App\Models\Commission;
-use App\Models\User;
-
-/**
- * Policy Commission (CDC §2 espace « Commissions »).
- * Fail-closed : le président gère sa commission, les membres n'y accèdent
- * que s'ils en sont membres. Toute commission hors périmètre -> refus (IDOR).
- */
-class CommissionPolicy
-{
-    public function viewAny(User $actor): bool
-    {
-        return in_array($actor->role, [
-            UserRole::Admin,
-            UserRole::GestionnaireEcole,
-            UserRole::PresidentCommission,
-            UserRole::MembreCommission,
-        ], true);
-    }
-
-    public function view(User $actor, Commission $commission): bool
-    {
-        if ($actor->role === UserRole::Admin) {
-            return true;
-        }
-
-        if ($actor->role === UserRole::Gest
+    public const UPDATE
