@@ -12,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use WooServ\FilamentDateTimeSlots\Forms\Components\DateTimeSlotPicker;
 
 class ReunionForm
 {
@@ -62,9 +63,32 @@ class ReunionForm
                     ->label('Ordre du jour')
                     ->columnSpanFull()
                     ->rows(8),
-                DateTimePicker::make('date_debut')
-                    ->label('Date et heure de début')
-                    ->required(),
+                DateTimeSlotPicker::make('date_debut')
+                    ->label('Date puis creneau (heures ouvrees)')
+                    ->format('Y-m-d H:i')
+                    ->minDate(now())
+                    ->minimumLeadTime(30)
+                    ->slotInterval(30)
+                    ->workingHours([
+                        'monday' => ['08:00', '18:00'],
+                        'tuesday' => ['08:00', '18:00'],
+                        'wednesday' => ['08:00', '18:00'],
+                        'thursday' => ['08:00', '18:00'],
+                        'friday' => ['08:00', '18:00'],
+                        'saturday' => ['09:00', '12:00'],
+                    ])
+                    ->blockedSlots(fn () => self::blockedByCommission())
+                    ->showBlockedSlots()
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function ($state, $set) {
+                        if ($state) {
+                            try {
+                                $set('date_fin', \Carbon\Carbon::parse($state)->addHours(2)->format('Y-m-d H:i:s'));
+                            } catch (\Throwable) {
+                            }
+                        }
+                    }),
                 DateTimePicker::make('date_fin')
                     ->label('Date et heure de fin')
                     ->after('date_debut'),
@@ -87,5 +111,24 @@ class ReunionForm
                     ->required()
                     ->disabled(fn ($livewire) => $livewire instanceof CreateReunion),
             ]);
+    }
+
+    /** Creneaux deja pris par commission : ['Y-m-d' => ['H:i', ...]]. */
+    protected static function blockedByCommission(): array
+    {
+        $out = [];
+        $rows = \App\Models\Reunion::query()
+            ->select(['commission_id', 'date_debut'])
+            ->whereNotNull('date_debut')
+            ->where('date_debut', '>=', now()->startOfDay())
+            ->limit(500)
+            ->get();
+        foreach ($rows as $r) {
+            $d = $r->date_debut instanceof \DateTimeInterface ? $r->date_debut->format('Y-m-d') : substr((string) $r->date_debut, 0, 10);
+            $h = $r->date_debut instanceof \DateTimeInterface ? $r->date_debut->format('H:i') : substr((string) $r->date_debut, 11, 5);
+            $out[$d][] = $h;
+        }
+
+        return $out;
     }
 }

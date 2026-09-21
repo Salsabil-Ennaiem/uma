@@ -20,7 +20,7 @@ class InstitutionPolicy
         ], true);
     }
 
-    public function view(User $actor): bool
+    public function view(User $actor, mixed $model = null): bool
     {
         return $this->viewAny($actor);
     }
@@ -30,12 +30,12 @@ class InstitutionPolicy
         return $this->manage($actor);
     }
 
-    public function update(User $actor): bool
+    public function update(User $actor, mixed $model = null): bool
     {
         return $this->manage($actor);
     }
 
-    public function delete(User $actor): bool
+    public function delete(User $actor, mixed $model = null): bool
     {
         return $this->manage($actor);
     }

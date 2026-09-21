@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a89cb02e5736bf095bbb378657fdb692",
+    "content-hash": "8a51b8574f9d9989cca52dd29fbf6922",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -8602,6 +8602,76 @@
                 }
             ],
             "time": "2026-04-26T05:33:54+00:00"
+        },
+        {
+            "name": "wooserv/filament-date-time-slots",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wooserv/filament-date-time-slots.git",
+                "reference": "2ac467facfcc82e68cb3897a79e79e7449cddd4d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wooserv/filament-date-time-slots/zipball/2ac467facfcc82e68cb3897a79e79e7449cddd4d",
+                "reference": "2ac467facfcc82e68cb3897a79e79e7449cddd4d",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^3.2|^4.0|^5.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.18",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^10.5|^11.0|^12.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "WooServ\\FilamentDateTimeSlots\\DateTimeSlotPickerServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "WooServ\\FilamentDateTimeSlots\\": "src/",
+                    "WooServ\\FilamentDateTimeSlots\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "WooServ Team",
+                    "email": "contact@wooserv.com",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Hamada Habib",
+                    "email": "ihfbib@wooserv.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Filament date-time picker with configurable calendars, working hours, available slots, and booking constraints.",
+            "homepage": "https://github.com/wooserv/filament-date-time-slots",
+            "keywords": [
+                "date-time-slots",
+                "filament-plugin",
+                "laravel",
+                "time-slots",
+                "wooServ"
+            ],
+            "support": {
+                "issues": "https://github.com/wooserv/filament-date-time-slots/issues",
+                "source": "https://github.com/wooserv/filament-date-time-slots"
+            },
+            "time": "2026-09-07T06:55:21+00:00"
         }
     ],
     "packages-dev": [

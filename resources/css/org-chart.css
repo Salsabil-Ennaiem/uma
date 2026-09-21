@@ -1,0 +1,15 @@
+.org-chart-root { overflow: auto; padding: 12px; }
+.org-list { list-style: none; margin: 0; padding-left: 22px; border-left: 1px dashed #d1d5db; }
+.org-chart-root > .org-list { padding-left: 0; border-left: none; }
+.org-item { margin: 6px 0; }
+.org-node { display: inline-flex; flex-direction: column; gap: 2px; text-align: left; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 12px; background: #fff; cursor: pointer; min-width: 180px; }
+.dark .org-node { background: #1f2937; border-color: #374151; }
+.org-node:hover { border-color: #f59e0b; }
+.org-node-selected { outline: 2px solid #f59e0b; }
+.org-node-name { font-weight: 600; font-size: 13px; }
+.org-node-title { font-size: 11px; opacity: .7; }
+.org-node-universite { border-left: 4px solid #7c3aed; }
+.org-node-ecole { border-left: 4px solid #2563eb; }
+.org-node-etablissement { border-left: 4px solid #059669; }
+.org-node-commission { border-left: 4px solid #f59e0b; }
+.org-node-membre { border-left: 4px solid #6b7280; }

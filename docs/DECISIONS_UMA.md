@@ -234,3 +234,14 @@ Statut : `V` = validée (défaut, décideur interne) · `P` = planifiée pour va
 - **A4** 🟡 paramétrage workflow à réviser sur seuils JORT.
 - **P9** ✅ clôturé (92/92 tests, 473 assertions au 2026-09-16, `composer audit` 0) ;
   dossier déploiement CCK livré dans `livrables_cdc5/06_installation_parametrage/`.
+
+## ADR-0006 — Organigramme jsOrgChart + calendrier réunions (slots)
+
+**Statut : PROPOSÉ (2026-09-21).** Détail : `docs/ADR-0006-organigramme-calendrier.md`.
+Sidebar « Organigramme » hiérarchique (université → école → établissement →
+commission → membre, rendu jsOrgChart local, détail + édition si policy
+`update` existante (`InstitutionPolicy` / `CommissionPolicy` / `UserPolicy`,
+sans doublon) ; `DateTimeSlotPicker` wooserv sur
+`ReunionForm.date_debut` (date puis créneau, heures ouvrées, `date_fin`
+auto +2h) ; page « Calendrier » (créer via bouton Filament, voir /
+modifier / supprimer selon policies).
